@@ -1167,12 +1167,18 @@ def test_6h_reminder():
 def run():
     app.run(host='0.0.0.0', port=5000)
 
-Thread(target=run).start()
 
-if not TOKEN:
-    print("ERROR: DISCORD_BOT_TOKEN not found in environment variables!")
-    print("Please add your Discord bot token as a secret.")
-else:
-    bot.run(TOKEN)
+def start_services():
+    Thread(target=run).start()
+
+    if not TOKEN:
+        print("ERROR: DISCORD_BOT_TOKEN not found in environment variables!")
+        print("Please add your Discord bot token as a secret.")
+    else:
+        bot.run(TOKEN)
+
+
+if __name__ == "__main__":
+    start_services()
 
 
