@@ -670,6 +670,11 @@ app.config['SESSION_TYPE'] = 'filesystem'
 app.config['SECRET_KEY'] = 'bible-study-bot-secret'
 Session(app)
 
+# Health check endpoint for cron jobs / uptime monitors
+@app.route('/health')
+def health():
+    return "ok", 200
+
 ADMIN_USERNAME = 'admin'
 ADMIN_PASSWORD = 'admin'
 
@@ -1169,4 +1174,5 @@ if not TOKEN:
     print("Please add your Discord bot token as a secret.")
 else:
     bot.run(TOKEN)
+
 
