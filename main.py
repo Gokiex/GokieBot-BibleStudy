@@ -21,7 +21,7 @@ ACTIVE_MESSAGES_FILE = "active_messages.json"
 DM_LOG_FILE = "dm_log.json"
 CHAT_HISTORY_FILE = "chat_history.json"
 ALLOWED_GUILD_ID = 1322203707768569856  # Lock bot to this server
-REMINDER_CHANNEL_ID = 1443812247276355765  # Channel for 6-hour reminder pings
+REMINDER_CHANNEL_ID = 1443856322817953855  # Channel for 6-hour reminder pings
 START_DATE = datetime(2025, 11, 29)  # Saturday, November 29, 2025
 BRISBANE_TZ = pytz.timezone('Australia/Brisbane')
 STUDY_HOUR = 19  # 7 PM
@@ -1169,3 +1169,4 @@ if not TOKEN:
     print("Please add your Discord bot token as a secret.")
 else:
     bot.run(TOKEN)
+
