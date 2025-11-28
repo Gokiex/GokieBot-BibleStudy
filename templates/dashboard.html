@@ -5,62 +5,301 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard</title>
     <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #f3f4f6;
+            color: #1f2937;
+        }
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        header h1 {
+            margin: 0;
+            font-size: 1.6rem;
+        }
+        header .bot-name {
+            opacity: 0.85;
+            font-size: 0.95rem;
+        }
+        header a {
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            padding: 10px 14px;
+            border: 1px solid rgba(255,255,255,0.4);
+            border-radius: 8px;
+        }
+        main {
+            max-width: 960px;
+            margin: 20px auto;
+            padding: 0 16px 40px;
+        }
+        .card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            padding: 20px;
+        }
+        .card h2 {
+            margin-top: 0;
+            font-size: 1.25rem;
+            color: #111827;
+        }
+        .status {
+            margin-top: 12px;
+            padding: 12px;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            display: none;
+        }
+        .status.show { display: block; }
+        .status.success {
+            background: #ecfdf3;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+        }
+        .status.error {
+            background: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecdd3;
+        }
+        .schedule-list {
+            display: grid;
+            gap: 12px;
+            margin-top: 16px;
+        }
         .schedule-item {
-            /* Remove rotation during drag */
-            border: 2px solid transparent; /* Add transparent borders */
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Improve shadows */
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 16px;
+            border-radius: 12px;
+            background: #f8fafc;
+            border: 2px solid transparent;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
         }
         .schedule-item.dragging {
-            /* Improved styling for dragging state */
-            border-color: rgba(0, 0, 0, 0.5);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+            border-color: rgba(102, 126, 234, 0.8);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+            background: #eef2ff;
+            opacity: 0.9;
         }
-        .schedule-item:hover {
-            border-color: rgba(0, 0, 0, 0.3);
+        .drag-handle {
+            cursor: grab;
+            font-size: 1.2rem;
+            color: #4b5563;
+            user-select: none;
         }
-        .schedule-item.current {
-            border-color: rgba(0, 0, 255, 0.5);
-            box-shadow: 0 0 15px rgba(0, 0, 255, 0.5);
+        .name {
+            font-weight: 700;
+            text-transform: capitalize;
+        }
+        .date-field {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .date-field label {
+            font-size: 0.9rem;
+            color: #6b7280;
+        }
+        .date-input {
+            padding: 8px 10px;
+            border-radius: 8px;
+            border: 1px solid #d1d5db;
+            font-size: 0.95rem;
+            min-width: 120px;
+        }
+        .date-input:focus {
+            outline: 2px solid #a5b4fc;
+            border-color: #a5b4fc;
+        }
+        .action-hint {
+            margin: 12px 0 4px;
+            color: #6b7280;
+            font-size: 0.95rem;
+        }
+        @media (max-width: 640px) {
+            .schedule-item {
+                grid-template-columns: 1fr;
+                align-items: flex-start;
+            }
+            .drag-handle { order: 3; }
+            .date-field { order: 2; }
         }
     </style>
 </head>
 <body>
-<script>
-    const scheduleItems = document.querySelectorAll('.schedule-item');
-    let draggedItem;
+    <header>
+        <div>
+            <h1>Bible Study Dashboard</h1>
+            <div class="bot-name">{{ bot_name }}</div>
+        </div>
+        <a href="/logout">Logout</a>
+    </header>
 
-    scheduleItems.forEach(item => {
-        item.addEventListener('dragstart', (e) => {
-            draggedItem = item;
-            item.classList.add('dragging');
-        });
+    <main>
+        <div class="card">
+            <h2>Schedule</h2>
+            <p class="action-hint">Drag and drop to reorder. Edit a date to update it.</p>
+            <div class="schedule-list" id="scheduleList">
+                {% for entry in schedule %}
+                <div class="schedule-item" draggable="true" data-id="{{ entry.id }}">
+                    <div class="drag-handle" title="Drag to reorder">↕</div>
+                    <div>
+                        <div class="name">{{ entry.name }}</div>
+                        <div class="date-field">
+                            <label for="date-{{ entry.id }}">Date:</label>
+                            <input
+                                id="date-{{ entry.id }}"
+                                class="date-input"
+                                type="text"
+                                value="{{ entry.date }}"
+                                aria-label="Date for {{ entry.name }}">
+                        </div>
+                    </div>
+                    <div class="current-tag" aria-hidden="true"></div>
+                </div>
+                {% endfor %}
+            </div>
+            <div id="status" class="status" role="status" aria-live="polite"></div>
+        </div>
+    </main>
 
-        item.addEventListener('dragover', (e) => {
-            e.preventDefault();
-        });
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const scheduleList = document.getElementById('scheduleList');
+            const statusEl = document.getElementById('status');
+            let draggedItem = null;
 
-        item.addEventListener('drop', (e) => {
-            e.preventDefault();
-            const dropTarget = e.target.closest('.schedule-item');
-            if (dropTarget && dropTarget !== draggedItem) {
-                const targetPosition = Array.from(scheduleItems).indexOf(dropTarget);
-                const draggedPosition = Array.from(scheduleItems).indexOf(draggedItem);
-                if (targetPosition !== draggedPosition) {
-                    // Only update when position changes
-                    if (targetPosition < draggedPosition) {
-                        dropTarget.parentNode.insertBefore(draggedItem, dropTarget);
+            const showStatus = (message, type = 'success') => {
+                statusEl.textContent = message;
+                statusEl.className = `status show ${type}`;
+            };
+
+            const clearStatus = () => {
+                statusEl.textContent = '';
+                statusEl.className = 'status';
+            };
+
+            const buildSchedulePayload = () => {
+                return Array.from(scheduleList.querySelectorAll('.schedule-item')).map(item => ({
+                    id: item.dataset.id,
+                    name: item.querySelector('.name').textContent.trim(),
+                    date: item.querySelector('.date-input').value.trim()
+                }));
+            };
+
+            const saveOrder = async () => {
+                try {
+                    const response = await fetch('/api/reorder', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ schedule: buildSchedulePayload() })
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        showStatus('Schedule order updated.');
                     } else {
-                        dropTarget.parentNode.insertBefore(draggedItem, dropTarget.nextSibling);
+                        showStatus(data.error || 'Unable to update order.', 'error');
                     }
+                } catch (error) {
+                    showStatus('Network error while saving order.', 'error');
                 }
-            }
-        });
+            };
 
-        item.addEventListener('dragend', () => {
-            item.classList.remove('dragging');
-            draggedItem = null;
+            const saveDate = async (item) => {
+                const dateInput = item.querySelector('.date-input');
+                const payload = {
+                    id: Number(item.dataset.id),
+                    date: dateInput.value.trim()
+                };
+                try {
+                    const response = await fetch('/api/update-date', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        showStatus('Date updated.');
+                    } else {
+                        showStatus(data.error || 'Unable to update date.', 'error');
+                    }
+                } catch (error) {
+                    showStatus('Network error while saving date.', 'error');
+                }
+            };
+
+            const getDragAfterElement = (container, y) => {
+                const elements = [...container.querySelectorAll('.schedule-item:not(.dragging)')];
+                return elements.reduce((closest, child) => {
+                    const box = child.getBoundingClientRect();
+                    const offset = y - box.top - box.height / 2;
+                    if (offset < 0 && offset > closest.offset) {
+                        return { offset, element: child };
+                    }
+                    return closest;
+                }, { offset: Number.NEGATIVE_INFINITY }).element;
+            };
+
+            scheduleList.addEventListener('dragstart', (event) => {
+                const target = event.target.closest('.schedule-item');
+                if (!target) return;
+                draggedItem = target;
+                target.classList.add('dragging');
+                // Firefox requires data to be set for drag events to fire correctly
+                event.dataTransfer.setData('text/plain', target.dataset.id);
+                event.dataTransfer.effectAllowed = 'move';
+            });
+
+            scheduleList.addEventListener('dragover', (event) => {
+                event.preventDefault();
+                const afterElement = getDragAfterElement(scheduleList, event.clientY);
+                if (!draggedItem) return;
+                if (afterElement == null) {
+                    scheduleList.appendChild(draggedItem);
+                } else {
+                    scheduleList.insertBefore(draggedItem, afterElement);
+                }
+            });
+
+            scheduleList.addEventListener('drop', (event) => {
+                event.preventDefault();
+                if (draggedItem) {
+                    draggedItem.classList.remove('dragging');
+                    draggedItem = null;
+                    saveOrder();
+                }
+            });
+
+            scheduleList.addEventListener('dragend', () => {
+                if (draggedItem) {
+                    draggedItem.classList.remove('dragging');
+                    draggedItem = null;
+                }
+            });
+
+            scheduleList.querySelectorAll('.date-input').forEach(input => {
+                input.addEventListener('change', (event) => {
+                    const parentItem = event.target.closest('.schedule-item');
+                    if (parentItem) {
+                        saveDate(parentItem);
+                    }
+                });
+            });
         });
-    });
-</script>
+    </script>
 </body>
 </html>
