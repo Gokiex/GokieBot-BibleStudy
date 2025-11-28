@@ -3,303 +3,1669 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard</title>
+    <title>Bible Study Schedule Dashboard</title>
     <style>
         * {
+            margin: 0;
+            padding: 0;
             box-sizing: border-box;
         }
         body {
-            margin: 0;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-            background: #f3f4f6;
-            color: #1f2937;
-        }
-        header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 24px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
         }
-        header h1 {
-            margin: 0;
-            font-size: 1.6rem;
-        }
-        header .bot-name {
-            opacity: 0.85;
-            font-size: 0.95rem;
-        }
-        header a {
-            color: white;
-            text-decoration: none;
-            font-weight: 600;
-            padding: 10px 14px;
-            border: 1px solid rgba(255,255,255,0.4);
-            border-radius: 8px;
-        }
-        main {
-            max-width: 960px;
-            margin: 20px auto;
-            padding: 0 16px 40px;
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
         }
         .card {
             background: white;
             border-radius: 16px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-            padding: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+            animation: slideUp 0.5s ease-out;
         }
-        .card h2 {
-            margin-top: 0;
-            font-size: 1.25rem;
-            color: #111827;
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes scaleIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        @keyframes removeSlide {
+            to {
+                opacity: 0;
+                transform: translateX(100px);
+                height: 0;
+                padding: 0;
+                margin: 0;
+            }
+        }
+        @keyframes messageSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        @keyframes messageBounce {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+        .chat-message {
+            animation: messageSlideIn 0.4s ease-out;
+        }
+        .chat-message:hover {
+            animation: messageBounce 0.3s ease-in-out;
+        }
+        .dm-list-item {
+            transition: all 0.2s ease;
+        }
+        .dm-list-item:hover {
+            background: #e8ecff !important;
+            transform: translateX(4px);
+        }
+        .dm-input-area {
+            transition: all 0.2s ease;
+        }
+        #dmChatContent {
+            scroll-behavior: smooth;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 1.8rem;
+            animation: fadeIn 0.6s ease-out;
         }
         .status {
-            margin-top: 12px;
-            padding: 12px;
-            border-radius: 12px;
-            font-size: 0.95rem;
-            display: none;
-        }
-        .status.show { display: block; }
-        .status.success {
-            background: #ecfdf3;
-            color: #166534;
-            border: 1px solid #bbf7d0;
-        }
-        .status.error {
-            background: #fef2f2;
-            color: #991b1b;
-            border: 1px solid #fecdd3;
-        }
-        .schedule-list {
-            display: grid;
-            gap: 12px;
-            margin-top: 16px;
-        }
-        .schedule-item {
-            display: grid;
-            grid-template-columns: auto 1fr auto;
-            align-items: center;
-            gap: 14px;
-            padding: 14px 16px;
-            border-radius: 12px;
-            background: #f8fafc;
-            border: 2px solid transparent;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
-        }
-        .schedule-item.dragging {
-            border-color: rgba(102, 126, 234, 0.8);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.12);
-            background: #eef2ff;
-            opacity: 0.9;
-        }
-        .drag-handle {
-            cursor: grab;
-            font-size: 1.2rem;
-            color: #4b5563;
-            user-select: none;
-        }
-        .name {
-            font-weight: 700;
-            text-transform: capitalize;
-        }
-        .date-field {
-            display: flex;
+            display: inline-flex;
             align-items: center;
             gap: 8px;
-            flex-wrap: wrap;
-        }
-        .date-field label {
+            background: #e8f5e9;
+            color: #2e7d32;
+            padding: 8px 16px;
+            border-radius: 20px;
             font-size: 0.9rem;
-            color: #6b7280;
+            margin-bottom: 20px;
+            animation: scaleIn 0.4s ease-out 0.2s both;
         }
-        .date-input {
-            padding: 8px 10px;
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            background: #4caf50;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.9); }
+        }
+        .bot-name {
+            color: #666;
+            font-size: 0.95rem;
+            margin-bottom: 20px;
+            animation: fadeIn 0.6s ease-out 0.3s both;
+        }
+        h2 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 1.3rem;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+        .drag-hint {
+            color: #888;
+            font-size: 0.85rem;
+            margin-bottom: 15px;
+        }
+        .schedule-list {
+            list-style: none;
+        }
+        .schedule-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: grab;
+            user-select: none;
+            animation: slideInLeft 0.4s ease-out both;
+        }
+        .schedule-item:nth-child(1) { animation-delay: 0.1s; }
+        .schedule-item:nth-child(2) { animation-delay: 0.15s; }
+        .schedule-item:nth-child(3) { animation-delay: 0.2s; }
+        .schedule-item:nth-child(4) { animation-delay: 0.25s; }
+        .schedule-item:nth-child(5) { animation-delay: 0.3s; }
+        .schedule-item:nth-child(6) { animation-delay: 0.35s; }
+        .schedule-item:nth-child(7) { animation-delay: 0.4s; }
+        .schedule-item:nth-child(8) { animation-delay: 0.45s; }
+        .schedule-item:active {
+            cursor: grabbing;
+        }
+        .schedule-item:hover {
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+            transform: translateY(-2px);
+        }
+        .schedule-item.current {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .schedule-item.dragging {
+            opacity: 0.5;
+            transform: scale(1.02) rotate(1deg);
+        }
+        .schedule-item.drag-over {
+            border: 2px dashed #667eea;
+            background: #f0f0ff;
+        }
+        .schedule-item.current.drag-over {
+            border: 2px dashed white;
+        }
+        .schedule-item.removing {
+            animation: removeSlide 0.4s ease-out forwards;
+        }
+        .drag-handle {
+            margin-right: 12px;
+            color: #aaa;
+            font-size: 1.2rem;
+            transition: color 0.2s;
+        }
+        .schedule-item:hover .drag-handle {
+            color: #667eea;
+        }
+        .schedule-item.current .drag-handle {
+            color: rgba(255,255,255,0.7);
+        }
+        .schedule-item.current:hover .drag-handle {
+            color: white;
+        }
+        .week-number {
+            font-weight: bold;
+            font-size: 1.1rem;
+            min-width: 80px;
+            color: #667eea;
+            margin-right: 8px;
+        }
+        .editable-date:hover {
+            background: #f0f0f0;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .schedule-item.current .week-number {
+            color: rgba(255, 255, 255, 0.95);
+        }
+        .leader-name {
+            flex: 1;
+        }
+        .current-badge {
+            background: rgba(255,255,255,0.3);
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            margin-right: 10px;
+        }
+        .remove-btn {
+            background: transparent;
+            border: none;
+            color: #dc3545;
+            cursor: pointer;
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 1.1rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+        .remove-btn:hover {
+            background: rgba(220, 53, 69, 0.1);
+            opacity: 1;
+            transform: scale(1.1);
+        }
+        .schedule-item.current .remove-btn {
+            color: white;
+            opacity: 0.8;
+        }
+        .schedule-item.current .remove-btn:hover {
+            background: rgba(255,255,255,0.2);
+            opacity: 1;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #666;
+            animation: fadeIn 0.5s ease-out;
+        }
+        .empty-state p {
+            margin-bottom: 10px;
+        }
+        .empty-state code {
+            background: #f0f0f0;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+        .info-box {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            border-radius: 0 8px 8px 0;
+            margin-top: 20px;
+            animation: slideInLeft 0.5s ease-out 0.4s both;
+        }
+        .info-box h3 {
+            color: #1565c0;
+            font-size: 1rem;
+            margin-bottom: 10px;
+        }
+        .info-box ul {
+            margin-left: 20px;
+            color: #333;
+        }
+        .info-box li {
+            margin-bottom: 5px;
+        }
+        .info-box code {
+            background: rgba(0,0,0,0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
             border-radius: 8px;
-            border: 1px solid #d1d5db;
+            cursor: pointer;
             font-size: 0.95rem;
-            min-width: 120px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            text-decoration: none;
         }
-        .date-input:focus {
-            outline: 2px solid #a5b4fc;
-            border-color: #a5b4fc;
+        .btn:hover {
+            background: #5a6fd6;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
         }
-        .action-hint {
-            margin: 12px 0 4px;
-            color: #6b7280;
+        .btn:active {
+            transform: translateY(0);
+        }
+        .btn-success {
+            background: #28a745;
+        }
+        .btn-success:hover {
+            background: #218838;
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4);
+        }
+        .header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .btn-group {
+            display: flex;
+            gap: 10px;
+        }
+        .save-status {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 12px 24px;
+            border-radius: 8px;
             font-size: 0.95rem;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1000;
         }
-        @media (max-width: 640px) {
-            .schedule-item {
-                grid-template-columns: 1fr;
-                align-items: flex-start;
-            }
-            .drag-handle { order: 3; }
-            .date-field { order: 2; }
+        .save-status.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .save-status.success {
+            background: #4caf50;
+            color: white;
+        }
+        .save-status.error {
+            background: #f44336;
+            color: white;
+        }
+        .save-status.saving {
+            background: #ff9800;
+            color: white;
+        }
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        .modal-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        .modal {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            max-width: 400px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .modal-overlay.show .modal {
+            transform: scale(1) translateY(0);
+        }
+        .modal h3 {
+            margin-bottom: 20px;
+            color: #333;
+            font-size: 1.3rem;
+        }
+        .modal-close {
+            float: right;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #999;
+            transition: color 0.2s;
+        }
+        .modal-close:hover {
+            color: #333;
+        }
+        .member-list {
+            list-style: none;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .member-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 5px;
+        }
+        .member-item:hover {
+            background: #f0f0ff;
+            transform: translateX(5px);
+        }
+        .member-name {
+            flex: 1;
+            font-weight: 500;
+        }
+        .member-username {
+            color: #888;
+            font-size: 0.85rem;
+        }
+        .member-add-icon {
+            color: #667eea;
+            font-size: 1.2rem;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .member-item:hover .member-add-icon {
+            opacity: 1;
+        }
+        .search-input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            margin-bottom: 15px;
+            transition: border-color 0.2s;
+        }
+        .search-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #888;
+        }
+        .loading-spinner {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            border: 3px solid #e0e0e0;
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .no-members {
+            text-align: center;
+            padding: 20px;
+            color: #888;
+        }
+        .countdown-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 12px;
+            text-align: center;
+            margin-bottom: 20px;
+            animation: slideUp 0.5s ease-out;
+        }
+        .countdown-box h3 {
+            font-size: 1rem;
+            margin-bottom: 12px;
+            opacity: 0.95;
+        }
+        .countdown-time {
+            font-size: 2.5rem;
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
+            letter-spacing: 2px;
+        }
+        .admin-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: all 0.3s;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        }
+        .admin-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.5);
+        }
+        .admin-btn:active {
+            transform: translateY(0);
+        }
+        .top-right {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 999;
+        }
+        .auth-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: all 0.3s;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        .auth-btn:hover {
+            background: #5a6fd6;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        .reminder-btn {
+            background: #ff9800;
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: all 0.3s;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        .reminder-btn:hover {
+            background: #e68900;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-overlay.show {
+            display: flex;
+        }
+        .login-modal {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            max-width: 400px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            animation: scaleIn 0.3s ease-out;
+        }
+        .login-modal h2 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 1.5rem;
+        }
+        .login-modal-subtitle {
+            color: #888;
+            margin-bottom: 25px;
+            font-size: 0.9rem;
+        }
+        .login-modal input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+        .login-modal input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        .login-modal-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        .login-modal-buttons button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .login-modal-buttons .btn-submit {
+            background: #667eea;
+            color: white;
+        }
+        .login-modal-buttons .btn-submit:hover {
+            background: #5a6fd6;
+        }
+        .login-modal-buttons .btn-cancel {
+            background: #f0f0f0;
+            color: #333;
+        }
+        .login-modal-buttons .btn-cancel:hover {
+            background: #e0e0e0;
+        }
+        .login-error {
+            background: #fee;
+            color: #c33;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+            display: none;
+        }
+        .login-error.show {
+            display: block;
         }
     </style>
 </head>
 <body>
-    <header>
-        <div>
-            <h1>Bible Study Dashboard</h1>
-            <div class="bot-name">{{ bot_name }}</div>
-        </div>
-        <a href="/logout">Logout</a>
-    </header>
-
-    <main>
-        <div class="card">
-            <h2>Schedule</h2>
-            <p class="action-hint">Drag and drop to reorder. Edit a date to update it.</p>
-            <div class="schedule-list" id="scheduleList">
-                {% for entry in schedule %}
-                <div class="schedule-item" draggable="true" data-id="{{ entry.id }}">
-                    <div class="drag-handle" title="Drag to reorder">↕</div>
-                    <div>
-                        <div class="name">{{ entry.name }}</div>
-                        <div class="date-field">
-                            <label for="date-{{ entry.id }}">Date:</label>
-                            <input
-                                id="date-{{ entry.id }}"
-                                class="date-input"
-                                type="text"
-                                value="{{ entry.date }}"
-                                aria-label="Date for {{ entry.name }}">
-                        </div>
-                    </div>
-                    <div class="current-tag" aria-hidden="true"></div>
+    <div class="top-right" id="topRight">
+        <button onclick="test24hReminder()" id="test24hBtn" class="reminder-btn" style="display: none;">🧪 Test 24h</button>
+        <button onclick="test6hReminder()" id="test6hBtn" class="reminder-btn" style="display: none;">🧪 Test 6h</button>
+        <button onclick="viewDmLog()" id="dmLogBtn" class="reminder-btn" style="display: none;">📋 DM Log</button>
+        <button onclick="openLoginModal()" id="loginBtn" class="auth-btn" style="display: none;">🔐 Login</button>
+        <button onclick="testReminder()" id="testDmBtn" class="auth-btn" style="display: none;">📧 Test DM</button>
+        <button onclick="logout()" id="logoutBtn" class="auth-btn" style="display: none;">Logout</button>
+    </div>
+    
+    <div class="modal-overlay" id="dmLogModal">
+        <div class="modal" style="width: 95%; max-width: 900px; height: 80vh; display: flex; flex-direction: row;">
+            <!-- DM List on Left -->
+            <div style="width: 280px; border-right: 1px solid #eee; display: flex; flex-direction: column; background: #f8f9fa;">
+                <div style="padding: 15px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
+                    <h3 style="margin: 0; font-size: 1rem;">💬 Messages</h3>
+                    <button onclick="openNewDmModal()" style="padding: 6px 10px; background: #667eea; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-weight: 500;">+ New</button>
                 </div>
-                {% endfor %}
+                <div id="dmListContent" style="flex: 1; overflow-y: auto; padding: 0;"></div>
             </div>
-            <div id="status" class="status" role="status" aria-live="polite"></div>
+            
+            <!-- Chat View on Right -->
+            <div style="flex: 1; display: flex; flex-direction: column;">
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px; border-bottom: 1px solid #eee;">
+                    <h3 id="currentUserName" style="margin: 0;">Select a conversation</h3>
+                    <div style="display: flex; gap: 8px;">
+                        <button onclick="loadDiscordHistory()" style="padding: 6px 12px; background: #667eea; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-weight: 500;" id="loadHistoryBtn">📥 Load Previous DMs</button>
+                        <button class="modal-close" onclick="closeDmLogModal()">&times;</button>
+                    </div>
+                </div>
+                <div id="dmChatContent" style="flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; background: #fff;" oncontextmenu="return false;"></div>
+                
+                <div id="dmContextMenu" style="position: fixed; background: white; border: 1px solid #ddd; border-radius: 6px; box-shadow: 0 2px 10px rgba(0,0,0,0.2); display: none; min-width: 180px; z-index: 10000;">
+                    <div onclick="openRenameDialog()" style="padding: 10px 15px; cursor: pointer; color: #333; border-bottom: 1px solid #eee;" onmouseover="this.style.background='#f5f5f5'" onmouseout="this.style.background='white'">✏️ Rename User</div>
+                    <div onclick="deleteUserConversation()" style="padding: 10px 15px; cursor: pointer; color: #d32f2f; border-top: 1px solid #eee;" onmouseover="this.style.background='#ffebee'" onmouseout="this.style.background='white'">🗑️ Delete Conversation</div>
+                </div>
+                
+                <div id="dmInputArea" style="padding: 10px; border-top: 1px solid #eee; display: none; gap: 8px; flex-direction: row;">
+                    <input type="text" id="dmInput" placeholder="Type a message..." style="flex: 1; padding: 8px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 0.9rem;" onkeypress="if(event.key==='Enter')sendDmMessage()">
+                    <button onclick="sendDmMessage()" style="padding: 8px 16px; background: #667eea; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 500;">Send</button>
+                </div>
+            </div>
         </div>
-    </main>
-
+    </div>
+    
+    <div class="modal-overlay" id="botMessageModal">
+        <div class="modal" style="width: 90%; max-width: 400px;">
+            <button class="modal-close" onclick="closeBotMessageModal()">&times;</button>
+            <h3>📥 Bot Incoming Message</h3>
+            <textarea id="botMessageInput" placeholder="Enter incoming bot message..." style="width: 100%; height: 100px; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 0.9rem; resize: none;"></textarea>
+            <div style="display: flex; gap: 8px; margin-top: 15px;">
+                <button onclick="saveBotMessage()" style="flex: 1; padding: 10px; background: #28a745; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 500;">Add Message</button>
+                <button onclick="closeBotMessageModal()" style="flex: 1; padding: 10px; background: #ccc; border: none; border-radius: 8px; cursor: pointer;">Cancel</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal-overlay" id="newDmModal">
+        <div class="modal" style="width: 90%; max-width: 400px;">
+            <button class="modal-close" onclick="closeNewDmModal()">&times;</button>
+            <h3>💬 Start New Conversation</h3>
+            <p style="color: #666; font-size: 0.9rem; margin-bottom: 15px;">Enter the Discord User ID to start a new conversation</p>
+            <input type="text" id="newDmUserId" placeholder="Discord User ID (numbers only)" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 0.9rem; margin-bottom: 15px;" onkeypress="if(event.key==='Enter')startNewDm()">
+            <div style="display: flex; gap: 8px;">
+                <button onclick="startNewDm()" style="flex: 1; padding: 10px; background: #667eea; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 500;">Start Conversation</button>
+                <button onclick="closeNewDmModal()" style="flex: 1; padding: 10px; background: #ccc; border: none; border-radius: 8px; cursor: pointer;">Cancel</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal-overlay" id="loginModal">
+        <div class="login-modal">
+            <h2>🔐 Admin Login</h2>
+            <p class="login-modal-subtitle">Bible Study Schedule</p>
+            <div class="login-error" id="loginError"></div>
+            <input type="text" id="username" placeholder="Username" autocomplete="username">
+            <input type="password" id="password" placeholder="Password" autocomplete="current-password">
+            <div class="login-modal-buttons">
+                <button class="btn-submit" onclick="submitLogin()">Login</button>
+                <button class="btn-cancel" onclick="closeLoginModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div class="card">
+            <h1>Bible Study Schedule</h1>
+            <div class="status">
+                <span class="status-dot"></span>
+                Bot Online
+            </div>
+            <p class="bot-name">{{ bot_name }}</p>
+            
+            <div class="countdown-box">
+                <h3>Next Study Session</h3>
+                <div class="countdown-time" id="countdownDisplay">--:--:--</div>
+            </div>
+            
+            <div style="text-align: center; margin: 30px 0; padding: 20px; background: #f8f9fa; border-radius: 12px;">
+                <h2 style="font-size: 1.2rem; color: #666; margin-bottom: 10px; font-weight: 500;">Upcoming Week</h2>
+                <div style="font-size: 2.5rem; font-weight: bold; color: #667eea;" id="upcomingLeader">--</div>
+            </div>
+            
+            <div class="header-row">
+                <h2>Leader Rotation</h2>
+                <div class="btn-group">
+                    <button class="btn btn-success" onclick="openAddModal()">+ Add Leader</button>
+                    <a href="/" class="btn">Refresh</a>
+                </div>
+            </div>
+            
+            {% if schedule %}
+            <p class="drag-hint">Drag to reorder the schedule</p>
+            <ul class="schedule-list" id="scheduleList">
+                {% for leader in schedule %}
+                <li class="schedule-item {% if loop.first %}current{% endif %}" 
+                    draggable="true" 
+                    data-id="{{ leader.id }}"
+                    data-name="{{ leader.name | e }}"
+                    data-date="{{ leader.date }}">
+                    <span class="drag-handle">&#9776;</span>
+                    <span class="week-number editable-date" onclick="editDate(this)" title="Click to change date" style="cursor: pointer;">{{ leader.date }}</span>
+                    <span class="leader-name">{{ leader.name }}</span>
+                    {% if loop.first %}
+                    <span class="current-badge">This Week</span>
+                    {% endif %}
+                    <button class="remove-btn" title="Remove">&#10005;</button>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <div class="empty-state">
+                <p>No leaders in the schedule yet.</p>
+                <p>Click <strong>+ Add Leader</strong> above or use <code>/add @user</code> in Discord.</p>
+            </div>
+            {% endif %}
+            
+            <div class="info-box">
+                <h3>Discord Commands</h3>
+                <ul>
+                    <li><code>/schedule</code> - View schedule in Discord</li>
+                    <li><code>/add @user</code> - Add a leader</li>
+                    <li><code>/remove @user</code> - Remove a leader</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal-overlay" id="addModal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeAddModal()">&times;</button>
+            <h3>Add Leader</h3>
+            <input type="text" class="search-input" id="memberSearch" placeholder="Search members..." oninput="filterMembers()">
+            <ul class="member-list" id="memberList">
+                <li class="loading"><div class="loading-spinner"></div></li>
+            </ul>
+        </div>
+    </div>
+    
+    <div class="modal-overlay" id="editDateModal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeEditDateModal()">&times;</button>
+            <h3>Change Date</h3>
+            <p id="editDateLeaderName" style="color: #666; margin-bottom: 20px;"></p>
+            <input type="date" id="editDateInput" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 1rem; margin-bottom: 20px;">
+            <div style="display: flex; gap: 10px;">
+                <button onclick="saveEditDate()" style="flex: 1; padding: 12px; background: #667eea; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">Save</button>
+                <button onclick="closeEditDateModal()" style="flex: 1; padding: 12px; background: #f0f0f0; color: #333; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">Cancel</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="save-status" id="saveStatus"></div>
+    
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const scheduleList = document.getElementById('scheduleList');
-            const statusEl = document.getElementById('status');
-            let draggedItem = null;
-
-            const showStatus = (message, type = 'success') => {
-                statusEl.textContent = message;
-                statusEl.className = `status show ${type}`;
-            };
-
-            const clearStatus = () => {
-                statusEl.textContent = '';
-                statusEl.className = 'status';
-            };
-
-            const buildSchedulePayload = () => {
-                return Array.from(scheduleList.querySelectorAll('.schedule-item')).map(item => ({
-                    id: item.dataset.id,
-                    name: item.querySelector('.name').textContent.trim(),
-                    date: item.querySelector('.date-input').value.trim()
-                }));
-            };
-
-            const saveOrder = async () => {
-                try {
-                    const response = await fetch('/api/reorder', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ schedule: buildSchedulePayload() })
-                    });
-                    const data = await response.json();
-                    if (data.success) {
-                        showStatus('Schedule order updated.');
+        const scheduleList = document.getElementById('scheduleList');
+        const saveStatus = document.getElementById('saveStatus');
+        const addModal = document.getElementById('addModal');
+        const memberList = document.getElementById('memberList');
+        const memberSearch = document.getElementById('memberSearch');
+        const countdownDisplay = document.getElementById('countdownDisplay');
+        
+        let allMembers = [];
+        
+        function checkAuthStatus() {
+            fetch('/api/check-login')
+                .then(res => res.json())
+                .then(data => {
+                    const loginBtn = document.getElementById('loginBtn');
+                    const test24hBtn = document.getElementById('test24hBtn');
+                    const test6hBtn = document.getElementById('test6hBtn');
+                    const dmLogBtn = document.getElementById('dmLogBtn');
+                    const testDmBtn = document.getElementById('testDmBtn');
+                    const logoutBtn = document.getElementById('logoutBtn');
+                    
+                    if (data.logged_in) {
+                        loginBtn.style.display = 'none';
+                        test24hBtn.style.display = 'block';
+                        test6hBtn.style.display = 'block';
+                        dmLogBtn.style.display = 'block';
+                        testDmBtn.style.display = 'block';
+                        logoutBtn.style.display = 'block';
                     } else {
-                        showStatus(data.error || 'Unable to update order.', 'error');
-                    }
-                } catch (error) {
-                    showStatus('Network error while saving order.', 'error');
-                }
-            };
-
-            const saveDate = async (item) => {
-                const dateInput = item.querySelector('.date-input');
-                const payload = {
-                    id: Number(item.dataset.id),
-                    date: dateInput.value.trim()
-                };
-                try {
-                    const response = await fetch('/api/update-date', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
-                    const data = await response.json();
-                    if (data.success) {
-                        showStatus('Date updated.');
-                    } else {
-                        showStatus(data.error || 'Unable to update date.', 'error');
-                    }
-                } catch (error) {
-                    showStatus('Network error while saving date.', 'error');
-                }
-            };
-
-            const getDragAfterElement = (container, y) => {
-                const elements = [...container.querySelectorAll('.schedule-item:not(.dragging)')];
-                return elements.reduce((closest, child) => {
-                    const box = child.getBoundingClientRect();
-                    const offset = y - box.top - box.height / 2;
-                    if (offset < 0 && offset > closest.offset) {
-                        return { offset, element: child };
-                    }
-                    return closest;
-                }, { offset: Number.NEGATIVE_INFINITY }).element;
-            };
-
-            scheduleList.addEventListener('dragstart', (event) => {
-                const target = event.target.closest('.schedule-item');
-                if (!target) return;
-                draggedItem = target;
-                target.classList.add('dragging');
-                // Firefox requires data to be set for drag events to fire correctly
-                event.dataTransfer.setData('text/plain', target.dataset.id);
-                event.dataTransfer.effectAllowed = 'move';
-            });
-
-            scheduleList.addEventListener('dragover', (event) => {
-                event.preventDefault();
-                const afterElement = getDragAfterElement(scheduleList, event.clientY);
-                if (!draggedItem) return;
-                if (afterElement == null) {
-                    scheduleList.appendChild(draggedItem);
-                } else {
-                    scheduleList.insertBefore(draggedItem, afterElement);
-                }
-            });
-
-            scheduleList.addEventListener('drop', (event) => {
-                event.preventDefault();
-                if (draggedItem) {
-                    draggedItem.classList.remove('dragging');
-                    draggedItem = null;
-                    saveOrder();
-                }
-            });
-
-            scheduleList.addEventListener('dragend', () => {
-                if (draggedItem) {
-                    draggedItem.classList.remove('dragging');
-                    draggedItem = null;
-                }
-            });
-
-            scheduleList.querySelectorAll('.date-input').forEach(input => {
-                input.addEventListener('change', (event) => {
-                    const parentItem = event.target.closest('.schedule-item');
-                    if (parentItem) {
-                        saveDate(parentItem);
+                        loginBtn.style.display = 'block';
+                        test24hBtn.style.display = 'none';
+                        test6hBtn.style.display = 'none';
+                        dmLogBtn.style.display = 'none';
+                        testDmBtn.style.display = 'none';
+                        logoutBtn.style.display = 'none';
                     }
                 });
+        }
+        
+        function openLoginModal() {
+            document.getElementById('loginModal').classList.add('show');
+            document.getElementById('username').focus();
+        }
+        
+        function closeLoginModal() {
+            document.getElementById('loginModal').classList.remove('show');
+            document.getElementById('loginError').classList.remove('show');
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+        }
+        
+        function submitLogin() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const errorDiv = document.getElementById('loginError');
+            
+            if (!username || !password) {
+                errorDiv.textContent = 'Please enter username and password';
+                errorDiv.classList.add('show');
+                return;
+            }
+            
+            fetch('/api/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    closeLoginModal();
+                    checkAuthStatus();
+                } else {
+                    errorDiv.textContent = data.error || 'Invalid credentials';
+                    errorDiv.classList.add('show');
+                }
+            })
+            .catch(() => {
+                errorDiv.textContent = 'Error logging in';
+                errorDiv.classList.add('show');
             });
+        }
+        
+        function logout() {
+            fetch('/api/logout')
+                .then(() => {
+                    checkAuthStatus();
+                });
+        }
+        
+        document.addEventListener('keypress', (e) => {
+            if (document.getElementById('loginModal').classList.contains('show') && e.key === 'Enter') {
+                submitLogin();
+            }
         });
+        
+        document.getElementById('loginModal').addEventListener('click', (e) => {
+            if (e.target.id === 'loginModal') {
+                closeLoginModal();
+            }
+        });
+        
+        checkAuthStatus();
+        
+        function updateCountdown() {
+            fetch('/api/countdown')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        const h = String(data.hours).padStart(2, '0');
+                        const m = String(data.minutes).padStart(2, '0');
+                        const s = String(data.seconds_display).padStart(2, '0');
+                        countdownDisplay.textContent = `${h}:${m}:${s}`;
+                    }
+                })
+                .catch(() => {});
+        }
+        
+        function testReminder() {
+            fetch('/api/test-reminder')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        showStatus('Test DM sent!', 'success');
+                    } else if (data.error === 'Not authenticated') {
+                        openLoginModal();
+                    } else {
+                        showStatus(data.message || 'Failed to send test DM', 'error');
+                    }
+                })
+                .catch(() => showStatus('Error sending test DM', 'error'));
+        }
+        
+        function updateUpcomingLeader() {
+            const firstItem = scheduleList?.querySelector('.schedule-item');
+            const leaderName = firstItem ? firstItem.dataset.name : '--';
+            const upcomingElement = document.getElementById('upcomingLeader');
+            if (upcomingElement) {
+                upcomingElement.textContent = leaderName;
+            }
+        }
+        
+        updateCountdown();
+        updateUpcomingLeader();
+        setInterval(updateCountdown, 1000);
+        
+        if (scheduleList) {
+            let draggedItem = null;
+            let originalScheduleState = null;
+            
+            scheduleList.addEventListener('dragstart', (e) => {
+                if (e.target.classList.contains('schedule-item')) {
+                    draggedItem = e.target;
+                    e.target.classList.add('dragging');
+                    e.dataTransfer.effectAllowed = 'move';
+                    
+                    // Store original state before drag
+                    originalScheduleState = Array.from(scheduleList.querySelectorAll('.schedule-item')).map(item => ({
+                        id: item.dataset.id,
+                        name: item.dataset.name,
+                        date: item.dataset.date
+                    }));
+                }
+            });
+            
+            scheduleList.addEventListener('dragend', (e) => {
+                if (e.target.classList.contains('schedule-item')) {
+                    e.target.classList.remove('dragging');
+                    document.querySelectorAll('.schedule-item').forEach(item => {
+                        item.classList.remove('drag-over');
+                    });
+                    draggedItem = null;
+                }
+            });
+            
+            scheduleList.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                const afterElement = getDragAfterElement(scheduleList, e.clientY);
+                
+                document.querySelectorAll('.schedule-item').forEach(item => {
+                    item.classList.remove('drag-over');
+                });
+                
+                if (afterElement) {
+                    afterElement.classList.add('drag-over');
+                }
+            });
+            
+            scheduleList.addEventListener('drop', (e) => {
+                e.preventDefault();
+                const afterElement = getDragAfterElement(scheduleList, e.clientY);
+                const dragging = document.querySelector('.dragging');
+                
+                if (dragging && originalScheduleState) {
+                    if (afterElement) {
+                        scheduleList.insertBefore(dragging, afterElement);
+                    } else {
+                        scheduleList.appendChild(dragging);
+                    }
+                    
+                    // Map new positions to original dates in those positions
+                    const items = scheduleList.querySelectorAll('.schedule-item');
+                    items.forEach((item, index) => {
+                        const newDate = originalScheduleState[index].date;
+                        item.dataset.date = newDate;
+                        item.querySelector('.week-number').textContent = newDate;
+                    });
+                    
+                    saveNewOrder();
+                    originalScheduleState = null;
+                    updateUpcomingLeader();
+                }
+            });
+        }
+        
+        function getDragAfterElement(container, y) {
+            const draggableElements = [...container.querySelectorAll('.schedule-item:not(.dragging)')];
+            
+            return draggableElements.reduce((closest, child) => {
+                const box = child.getBoundingClientRect();
+                const offset = y - box.top - box.height / 2;
+                
+                if (offset < 0 && offset > closest.offset) {
+                    return { offset: offset, element: child };
+                } else {
+                    return closest;
+                }
+            }, { offset: Number.NEGATIVE_INFINITY }).element;
+        }
+        
+        function updateWeekNumbers() {
+            const items = scheduleList.querySelectorAll('.schedule-item');
+            items.forEach((item, index) => {
+                item.querySelector('.week-number').textContent = `Week ${index + 1}`;
+                
+                item.classList.remove('current');
+                const badge = item.querySelector('.current-badge');
+                if (badge) badge.remove();
+                
+                if (index === 0) {
+                    item.classList.add('current');
+                    const removeBtn = item.querySelector('.remove-btn');
+                    const newBadge = document.createElement('span');
+                    newBadge.className = 'current-badge';
+                    newBadge.textContent = 'This Week';
+                    removeBtn.before(newBadge);
+                }
+            });
+        }
+        
+        function saveNewOrder() {
+            const items = scheduleList.querySelectorAll('.schedule-item');
+            const currentItems = Array.from(scheduleList.querySelectorAll('.schedule-item'));
+            
+            // Get original dates in current order
+            const originalDates = currentItems.map(item => item.dataset.date);
+            
+            // Build new order with names/IDs in new positions, but keep dates in position order
+            const newOrder = [];
+            items.forEach((item, index) => {
+                newOrder.push({
+                    id: item.dataset.id,
+                    name: item.dataset.name,
+                    date: originalDates[index]
+                });
+            });
+            
+            showStatus('Saving...', 'saving');
+            
+            fetch('/api/reorder', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ schedule: newOrder })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showStatus('Saved!', 'success');
+                    // Update the UI with new dates
+                    items.forEach((item, index) => {
+                        item.dataset.date = originalDates[index];
+                        item.querySelector('.week-number').textContent = originalDates[index];
+                    });
+                } else {
+                    showStatus('Error saving', 'error');
+                }
+            })
+            .catch(() => showStatus('Error saving', 'error'));
+        }
+        
+        if (scheduleList) {
+            scheduleList.addEventListener('click', (e) => {
+                if (e.target.classList.contains('remove-btn')) {
+                    const item = e.target.closest('.schedule-item');
+                    const id = item.dataset.id;
+                    const name = item.dataset.name;
+                    removeUser(id, name, item);
+                }
+            });
+        }
+        
+        function showStatus(message, type) {
+            saveStatus.textContent = message;
+            saveStatus.className = 'save-status show ' + type;
+            
+            if (type !== 'saving') {
+                setTimeout(() => {
+                    saveStatus.classList.remove('show');
+                }, 2000);
+            }
+        }
+        
+        function openAddModal() {
+            addModal.classList.add('show');
+            memberSearch.value = '';
+            loadMembers();
+        }
+        
+        function closeAddModal() {
+            addModal.classList.remove('show');
+        }
+        
+        addModal.addEventListener('click', (e) => {
+            if (e.target === addModal) closeAddModal();
+        });
+        
+        function loadMembers() {
+            memberList.innerHTML = '<li class="loading"><div class="loading-spinner"></div></li>';
+            
+            fetch('/api/members')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        allMembers = data.members;
+                        renderMembers(allMembers);
+                    } else {
+                        memberList.innerHTML = '<li class="no-members">Error loading members</li>';
+                    }
+                })
+                .catch(() => {
+                    memberList.innerHTML = '<li class="no-members">Error loading members</li>';
+                });
+        }
+        
+        function renderMembers(members) {
+            if (members.length === 0) {
+                memberList.innerHTML = '<li class="no-members">No available members to add</li>';
+                return;
+            }
+            
+            memberList.innerHTML = members.map(member => `
+                <li class="member-item" data-id="${member.id}" data-name="${escapeHtml(member.name)}">
+                    <span class="member-name">${escapeHtml(member.name)}</span>
+                    <span class="member-username">${escapeHtml(member.username)}</span>
+                    <span class="member-add-icon">+</span>
+                </li>
+            `).join('');
+        }
+        
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        memberList.addEventListener('click', (e) => {
+            const item = e.target.closest('.member-item');
+            if (item) {
+                addMember(item.dataset.id, item.dataset.name);
+            }
+        });
+        
+        function filterMembers() {
+            const search = memberSearch.value.toLowerCase();
+            const filtered = allMembers.filter(m => 
+                m.name.toLowerCase().includes(search) || 
+                m.username.toLowerCase().includes(search)
+            );
+            renderMembers(filtered);
+        }
+        
+        function addMember(id, name) {
+            showStatus('Adding...', 'saving');
+            
+            fetch('/api/add', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: String(id), name: name })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showStatus('Added!', 'success');
+                    closeAddModal();
+                    setTimeout(() => location.reload(), 500);
+                } else {
+                    showStatus(data.error || 'Error adding', 'error');
+                }
+            })
+            .catch(() => showStatus('Error adding', 'error'));
+        }
+        
+        let editingDateElement = null;
+        let editingDateId = null;
+        
+        function editDate(element) {
+            editingDateElement = element;
+            const item = element.closest('.schedule-item');
+            editingDateId = item.dataset.id;
+            const name = item.dataset.name;
+            const currentDate = element.textContent.trim();
+            
+            document.getElementById('editDateLeaderName').textContent = `Change date for ${name}`;
+            document.getElementById('editDateInput').value = '';
+            document.getElementById('editDateModal').classList.add('show');
+            document.getElementById('editDateInput').focus();
+        }
+        
+        function closeEditDateModal() {
+            document.getElementById('editDateModal').classList.remove('show');
+            editingDateElement = null;
+            editingDateId = null;
+        }
+        
+        function saveEditDate() {
+            const newDate = document.getElementById('editDateInput').value;
+            if (!newDate || !editingDateId) return;
+            
+            const dateObj = new Date(newDate);
+            const formatted = dateObj.toLocaleDateString('en-AU', { weekday: 'short', day: '2-digit', month: '2-digit' });
+            
+            fetch('/api/update-date', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: editingDateId, date: formatted })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    editingDateElement.textContent = formatted;
+                    editingDateElement.closest('.schedule-item').dataset.date = formatted;
+                    showStatus('Date updated!', 'success');
+                    closeEditDateModal();
+                    updateCountdown();
+                } else {
+                    showStatus('Error updating date', 'error');
+                }
+            })
+            .catch(() => showStatus('Error updating date', 'error'));
+        }
+        
+        function removeUser(id, name, item) {
+            if (!confirm(`Remove ${name} from the schedule?`)) return;
+            
+            item.classList.add('removing');
+            
+            showStatus('Removing...', 'saving');
+            
+            fetch('/api/remove', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: String(id) })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showStatus('Removed!', 'success');
+                    setTimeout(() => {
+                        item.remove();
+                        if (scheduleList && scheduleList.children.length === 0) {
+                            location.reload();
+                        } else {
+                            updateUpcomingLeader();
+                        }
+                    }, 400);
+                } else {
+                    item.classList.remove('removing');
+                    showStatus(data.error || 'Error removing', 'error');
+                }
+            })
+            .catch(() => {
+                item.classList.remove('removing');
+                showStatus('Error removing', 'error');
+            });
+        }
+        
+        function test24hReminder() {
+            showStatus('Sending 24h test reminder...', 'saving');
+            fetch('/api/test-24h-reminder', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showStatus('24h test reminder sent! 📧', 'success');
+                } else {
+                    showStatus(data.error || 'Error sending reminder', 'error');
+                }
+            })
+            .catch(() => showStatus('Error sending reminder', 'error'));
+        }
+        
+        function test6hReminder() {
+            showStatus('Sending 6h test reminder...', 'saving');
+            fetch('/api/test-6h-reminder', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showStatus('6h test reminder sent! 📢', 'success');
+                } else {
+                    showStatus(data.error || 'Error sending reminder', 'error');
+                }
+            })
+            .catch(() => showStatus('Error sending reminder', 'error'));
+        }
+        
+        let currentSelectedUserId = null;
+        let currentSelectedUsername = null;
+        let contextMenuUserId = null;
+        
+        function viewDmLog() {
+            loadDmList();
+            document.getElementById('dmLogModal').classList.add('show');
+        }
+        
+        function showContextMenu(e, userId, username) {
+            e.preventDefault();
+            contextMenuUserId = userId;
+            const menu = document.getElementById('dmContextMenu');
+            menu.style.left = e.clientX + 'px';
+            menu.style.top = e.clientY + 'px';
+            menu.style.display = 'block';
+        }
+        
+        function hideContextMenu() {
+            const menu = document.getElementById('dmContextMenu');
+            menu.style.display = 'none';
+        }
+        
+        function deleteUserConversation() {
+            if (!contextMenuUserId) return;
+            if (!confirm('Delete this conversation? This cannot be undone.')) return;
+            
+            fetch(`/api/delete-user-conversation/${contextMenuUserId}`, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    showStatus('Conversation deleted', 'success');
+                    if (currentSelectedUserId === contextMenuUserId) {
+                        currentSelectedUserId = null;
+                        currentSelectedUsername = null;
+                        document.getElementById('dmInputArea').style.display = 'none';
+                        document.getElementById('dmChatContent').innerHTML = '';
+                    }
+                    loadDmList();
+                } else {
+                    showStatus(data.error || 'Error deleting conversation', 'error');
+                }
+            })
+            .catch(() => showStatus('Error deleting conversation', 'error'));
+            
+            hideContextMenu();
+        }
+        
+        function openRenameDialog() {
+            if (!contextMenuUserId) return;
+            const newName = prompt('Enter new name for this user:');
+            if (!newName || !newName.trim()) return;
+            
+            fetch(`/api/rename-user/${contextMenuUserId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ new_name: newName.trim() })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    showStatus('User renamed', 'success');
+                    if (currentSelectedUserId === contextMenuUserId) {
+                        currentSelectedUsername = newName.trim();
+                    }
+                    loadDmList();
+                    if (currentSelectedUserId === contextMenuUserId) {
+                        loadUserChat(currentSelectedUserId);
+                    }
+                } else {
+                    showStatus(data.error || 'Error renaming user', 'error');
+                }
+            })
+            .catch(() => showStatus('Error renaming user', 'error'));
+            
+            hideContextMenu();
+        }
+        
+        function loadDmList() {
+            fetch('/api/dm-conversations')
+                .then(res => res.json())
+                .then(data => {
+                    const listContent = document.getElementById('dmListContent');
+                    if (data.conversations && data.conversations.length > 0) {
+                        listContent.innerHTML = data.conversations.map((conv, idx) => {
+                            const delay = 0.3 + idx * 0.05;
+                            const hasAnimation = listContent.innerHTML === ''; // Only animate on first load
+                            const animation = hasAnimation ? `animation: slideInLeft ${delay}s ease-out;` : '';
+                            return `
+                            <div class="dm-list-item" onclick="selectUser('${conv.user_id}', '${escapeHtml(conv.username || 'Unknown')}')" oncontextmenu="showContextMenu(event, '${conv.user_id}', '${escapeHtml(conv.username || 'Unknown')}')" style="padding: 12px 15px; border-bottom: 1px solid #ddd; cursor: pointer; background: ${currentSelectedUserId === conv.user_id ? '#e0e7ff' : '#fff'}; ${animation}">
+                                <div style="font-weight: 500; font-size: 0.9rem; margin-bottom: 4px;">${escapeHtml(conv.username || 'Unknown')}</div>
+                                <div style="color: #888; font-size: 0.8rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(conv.last_message)}</div>
+                            </div>
+                        `;
+                        }).join('');
+                    } else {
+                        listContent.innerHTML = '<p style="color: #888; padding: 15px; text-align: center; font-size: 0.9rem; animation: fadeIn 0.5s ease-out;">No messages yet</p>';
+                    }
+                })
+                .catch(err => showStatus('Error loading DM list', 'error'));
+        }
+        
+        function selectUser(userId, username = null) {
+            currentSelectedUserId = userId;
+            currentSelectedUsername = username;
+            document.getElementById('dmInputArea').style.display = 'flex';
+            document.getElementById('dmInput').value = '';
+            loadUserChat(userId);
+            loadDmList(); // Refresh list to show selection
+        }
+        
+        function loadUserChat(userId) {
+            fetch(`/api/user-messages/${userId}`)
+                .then(res => res.json())
+                .then(data => {
+                    const content = document.getElementById('dmChatContent');
+                    let displayName = currentSelectedUsername || 'Unknown';
+                    
+                    if (data.messages && data.messages.length > 0) {
+                        // Get username from first user message if not already set
+                        if (!currentSelectedUsername) {
+                            const userMsg = data.messages.find(msg => msg.from && msg.from.startsWith('user_') && msg.username);
+                            if (userMsg && userMsg.username) {
+                                displayName = userMsg.username;
+                            }
+                        }
+                        
+                        document.getElementById('currentUserName').textContent = `Conversation with ${escapeHtml(displayName)}`;
+                        
+                        const wasEmpty = content.innerHTML === '' || content.innerHTML.includes('No messages');
+                        content.innerHTML = data.messages.map((msg, idx) => {
+                            const isAdmin = msg.from === 'admin';
+                            const delay = wasEmpty ? (idx * 0.08) : 0; // Only animate on initial load
+                            const animStyle = wasEmpty ? `animation-delay: ${delay}s;` : 'animation: none;';
+                            
+                            const bgStyle = isAdmin ? 'background: #667eea; color: white;' : 'background: #e4e6eb; color: #000;';
+                            const align = isAdmin ? 'flex-end' : 'flex-start';
+                            const label = isAdmin ? 'You' : 'User';
+                            return `
+                                <div class="chat-message" style="display: flex; justify-content: ${align}; margin-bottom: 8px; ${animStyle}">
+                                    <div style="max-width: 60%; padding: 10px 12px; border-radius: 18px; word-wrap: break-word; ${bgStyle} box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: all 0.2s ease;">
+                                        <div style="font-size: 0.85rem; font-weight: 500; opacity: 0.8; margin-bottom: 4px;">${label}</div>
+                                        <div style="font-size: 0.9rem; line-height: 1.4;">${escapeHtml(msg.text)}</div>
+                                        <div style="font-size: 0.7rem; margin-top: 4px; opacity: 0.7;">${new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}</div>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('');
+                        setTimeout(() => { content.scrollTop = content.scrollHeight; }, 100);
+                    } else {
+                        document.getElementById('currentUserName').textContent = `Conversation with ${escapeHtml(displayName)}`;
+                        content.innerHTML = '<p style="color: #888; text-align: center; margin: auto; animation: fadeIn 0.5s ease-out;">No messages in this conversation</p>';
+                    }
+                })
+                .catch(err => showStatus('Error loading chat', 'error'));
+        }
+        
+        // Auto-refresh when modal is open
+        setInterval(() => {
+            if (document.getElementById('dmLogModal').classList.contains('show')) {
+                loadDmList();
+                if (currentSelectedUserId) {
+                    loadUserChat(currentSelectedUserId);
+                }
+            }
+        }, 2000);
+        
+        function loadDiscordHistory() {
+            if (!currentSelectedUserId) {
+                showStatus('Please select a user first', 'error');
+                return;
+            }
+            
+            const btn = document.getElementById('loadHistoryBtn');
+            btn.disabled = true;
+            btn.textContent = '⏳ Loading...';
+            showStatus('Loading previous DMs from Discord...', 'saving');
+            
+            fetch(`/api/load-dm-history/${currentSelectedUserId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            })
+            .then(res => res.json())
+            .then(data => {
+                btn.disabled = false;
+                btn.textContent = '📥 Load Previous DMs';
+                if (data.success) {
+                    showStatus('DM history loaded! 📥', 'success');
+                    loadUserChat(currentSelectedUserId);
+                } else {
+                    showStatus(data.error || 'Could not load history', 'error');
+                }
+            })
+            .catch(() => {
+                btn.disabled = false;
+                btn.textContent = '📥 Load Previous DMs';
+                showStatus('Error loading history', 'error');
+            });
+        }
+        
+        function sendDmMessage() {
+            if (!currentSelectedUserId) {
+                showStatus('Please select a user first', 'error');
+                return;
+            }
+            
+            const input = document.getElementById('dmInput');
+            const text = input.value.trim();
+            if (!text) return;
+            
+            fetch('/api/send-chat-message', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: text, user_id: currentSelectedUserId })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    input.value = '';
+                    loadUserChat(currentSelectedUserId);
+                } else {
+                    showStatus(data.error || 'Error sending message', 'error');
+                }
+            })
+            .catch(() => showStatus('Error sending message', 'error'));
+        }
+        
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        function addBotMessage() {
+            document.getElementById('botMessageInput').value = '';
+            document.getElementById('botMessageModal').classList.add('show');
+            document.getElementById('botMessageInput').focus();
+        }
+        
+        function closeBotMessageModal() {
+            document.getElementById('botMessageModal').classList.remove('show');
+        }
+        
+        function saveBotMessage() {
+            const input = document.getElementById('botMessageInput');
+            const text = input.value.trim();
+            if (!text) return;
+            
+            fetch('/api/add-bot-message', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: text })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    closeBotMessageModal();
+                    loadChatMessages();
+                } else {
+                    showStatus(data.error || 'Error adding message', 'error');
+                }
+            })
+            .catch(() => showStatus('Error adding message', 'error'));
+        }
+        
+        function closeDmLogModal() {
+            document.getElementById('dmLogModal').classList.remove('show');
+            hideContextMenu();
+        }
+        
+        // Close context menu when clicking elsewhere
+        document.addEventListener('click', function(e) {
+            if (e.target.id !== 'dmContextMenu' && !e.target.closest('#dmContextMenu')) {
+                hideContextMenu();
+            }
+        });
+        
+        function openNewDmModal() {
+            document.getElementById('newDmUserId').value = '';
+            document.getElementById('newDmModal').classList.add('show');
+            document.getElementById('newDmUserId').focus();
+        }
+        
+        function closeNewDmModal() {
+            document.getElementById('newDmModal').classList.remove('show');
+        }
+        
+        function startNewDm() {
+            const userId = document.getElementById('newDmUserId').value.trim();
+            if (!userId) {
+                showStatus('Please enter a User ID', 'error');
+                return;
+            }
+            
+            // Validate it's a number
+            if (!/^\d+$/.test(userId)) {
+                showStatus('User ID must be numbers only', 'error');
+                return;
+            }
+            
+            // Select this user
+            closeNewDmModal();
+            selectUser(userId);
+            showStatus('New conversation started!', 'success');
+        }
     </script>
 </body>
 </html>
