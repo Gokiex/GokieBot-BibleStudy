@@ -1,0 +1,26 @@
+{
+    "schedules": {
+        "default": [
+            {
+                "id": 774799037458546718,
+                "name": "jayden",
+                "date": "Sat 29/11"
+            },
+            {
+                "id": 450911561024798730,
+                "name": "lionel",
+                "date": "Sat 06/12"
+            },
+            {
+                "id": 437890327571988490,
+                "name": "christine",
+                "date": "Sat 13/12"
+            },
+            {
+                "id": 458861434277724162,
+                "name": "samuel",
+                "date": "Sat 20/12"
+            }
+        ]
+    }
+}
