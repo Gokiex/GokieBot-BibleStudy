@@ -1,26 +1,66 @@
-/* Updating .schedule-item styles as per the request */
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <style>
+        .schedule-item {
+            /* Remove rotation during drag */
+            border: 2px solid transparent; /* Add transparent borders */
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Improve shadows */
+        }
+        .schedule-item.dragging {
+            /* Improved styling for dragging state */
+            border-color: rgba(0, 0, 0, 0.5);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        }
+        .schedule-item:hover {
+            border-color: rgba(0, 0, 0, 0.3);
+        }
+        .schedule-item.current {
+            border-color: rgba(0, 0, 255, 0.5);
+            box-shadow: 0 0 15px rgba(0, 0, 255, 0.5);
+        }
+    </style>
+</head>
+<body>
+<script>
+    const scheduleItems = document.querySelectorAll('.schedule-item');
+    let draggedItem;
 
-.schedule-item.dragging {
-    /* Removed rotate(1deg) and changed to scale */
-    transform: scale(1.01);
-    border: 2px solid #667eea;
-    background: #fff;
-    cursor: grabbing;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
+    scheduleItems.forEach(item => {
+        item.addEventListener('dragstart', (e) => {
+            draggedItem = item;
+            item.classList.add('dragging');
+        });
 
-.schedule-item:hover {
-    /* Updating hover state */
-    border-color: rgba(102, 126, 234, 0.2);
-}
+        item.addEventListener('dragover', (e) => {
+            e.preventDefault();
+        });
 
-.schedule-item {
-    /* Added base styles */
-    border: 2px solid transparent;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-}
+        item.addEventListener('drop', (e) => {
+            e.preventDefault();
+            const dropTarget = e.target.closest('.schedule-item');
+            if (dropTarget && dropTarget !== draggedItem) {
+                const targetPosition = Array.from(scheduleItems).indexOf(dropTarget);
+                const draggedPosition = Array.from(scheduleItems).indexOf(draggedItem);
+                if (targetPosition !== draggedPosition) {
+                    // Only update when position changes
+                    if (targetPosition < draggedPosition) {
+                        dropTarget.parentNode.insertBefore(draggedItem, dropTarget);
+                    } else {
+                        dropTarget.parentNode.insertBefore(draggedItem, dropTarget.nextSibling);
+                    }
+                }
+            }
+        });
 
-// Update dragover event listener pseudo code
-if (afterElement !== draggedItem.nextElementSibling) {
-    // existing code to update DOM...
-}
+        item.addEventListener('dragend', () => {
+            item.classList.remove('dragging');
+            draggedItem = null;
+        });
+    });
+</script>
+</body>
+</html>
