@@ -192,11 +192,12 @@ def format_date(date):
     return date.strftime("%a %d/%m").replace("Sat", "Sat").replace("Sun", "Sun").replace("Mon", "Mon").replace("Tue", "Tue").replace("Wed", "Wed").replace("Thu", "Thu").replace("Fri", "Fri")
 
 def parse_date_string(date_str):
-    """Parse 'Sat 29/11' to actual date in 2025."""
+    """Parse 'Sat 29/11' to a timezone-aware datetime using the start year."""
     try:
         day, month = date_str.split()[-1].split('/')
-        return datetime(2025, int(month), int(day), STUDY_HOUR, STUDY_MINUTE, 0)
-    except:
+        session_dt = datetime(START_DATE.year, int(month), int(day), STUDY_HOUR, STUDY_MINUTE, 0)
+        return BRISBANE_TZ.localize(session_dt)
+    except Exception:
         return None
 
 def get_next_study_time():
@@ -210,7 +211,10 @@ def get_next_study_time():
         if isinstance(first_entry, dict) and "date" in first_entry:
             scheduled_date = parse_date_string(first_entry["date"])
             if scheduled_date:
-                scheduled_date = BRISBANE_TZ.localize(scheduled_date)
+                if scheduled_date.tzinfo is None:
+                    scheduled_date = BRISBANE_TZ.localize(scheduled_date)
+                else:
+                    scheduled_date = scheduled_date.astimezone(BRISBANE_TZ)
                 if scheduled_date > now:
                     return scheduled_date
     
@@ -517,15 +521,17 @@ async def send_24h_reminders():
     """Send DM reminders to leaders 24 hours before their session."""
     global last_reminder_date
     now = datetime.now(BRISBANE_TZ)
-    
-    if last_reminder_date == now.date():
-        return
-    
+
     try:
-        tomorrow = now + timedelta(days=1)
-        tomorrow_5pm = tomorrow.replace(hour=19, minute=30, second=0, microsecond=0)
-        time_until = (tomorrow_5pm - now).total_seconds()
-        
+        next_session = get_next_study_time()
+        if not next_session:
+            return
+
+        if last_reminder_date == next_session.date():
+            return
+
+        time_until = (next_session - now).total_seconds()
+
         if 23 * 3600 < time_until < 25 * 3600:
             for guild in bot.guilds:
                 current_schedule = load_schedule(None)
@@ -533,15 +539,15 @@ async def send_24h_reminders():
                     leader_entry = current_schedule[0]
                     leader_id = leader_entry["id"] if isinstance(leader_entry, dict) else leader_entry
                     leader_name = leader_entry.get("name", "Leader") if isinstance(leader_entry, dict) else "Leader"
-                    
+
                     member = guild.get_member(leader_id)
                     if member:
                         try:
                             # Use Discord timestamp (shows in user's local timezone)
-                            study_timestamp = int(tomorrow_5pm.timestamp())
+                            study_timestamp = int(next_session.timestamp())
                             await member.send(f"📖 Reminder: You're leading Bible Study on <t:{study_timestamp}:F> (<t:{study_timestamp}:R>)!")
                             log_dm(leader_id, member.display_name, "24h_reminder", "sent")
-                            last_reminder_date = now.date()
+                            last_reminder_date = next_session.date()
                         except Exception as e:
                             log_dm(leader_id, leader_name, "24h_reminder", "failed")
                             print(f"Could not DM {member}: {e}")
@@ -552,15 +558,17 @@ async def send_6h_reminders():
     """Send channel ping reminders to leaders 6 hours before their session."""
     global last_6h_reminder_time
     now = datetime.now(BRISBANE_TZ)
-    
-    if last_6h_reminder_time and (now - last_6h_reminder_time).total_seconds() < 3600:
-        return
-    
+
     try:
-        tomorrow = now + timedelta(days=1)
-        tomorrow_5pm = tomorrow.replace(hour=19, minute=30, second=0, microsecond=0)
-        time_until = (tomorrow_5pm - now).total_seconds()
-        
+        next_session = get_next_study_time()
+        if not next_session:
+            return
+
+        if last_6h_reminder_time and last_6h_reminder_time.date() == next_session.date():
+            return
+
+        time_until = (next_session - now).total_seconds()
+
         if 5.5 * 3600 < time_until < 6.5 * 3600:
             for guild in bot.guilds:
                 if guild.id == ALLOWED_GUILD_ID:
@@ -572,12 +580,12 @@ async def send_6h_reminders():
                         channel = guild.get_channel(REMINDER_CHANNEL_ID)
                         if channel:
                             try:
-                                study_timestamp = int(tomorrow_5pm.timestamp())
+                                study_timestamp = int(next_session.timestamp())
                                 member = guild.get_member(leader_id)
                                 member_name = member.display_name if member else "Unknown"
                                 await channel.send(f"<@{leader_id}> - Your Bible Study session is <t:{study_timestamp}:R> 📖")
                                 log_dm(leader_id, member_name, "6h_reminder", "sent")
-                                last_6h_reminder_time = now
+                                last_6h_reminder_time = next_session
                             except Exception as e:
                                 log_dm(leader_id, "Unknown", "6h_reminder", "failed")
                                 print(f"Could not send 6h reminder: {e}")
@@ -883,16 +891,18 @@ def test_24h_reminder():
             current_schedule = load_schedule(None)
             if not current_schedule:
                 return False
-            
+
             leader_entry = current_schedule[0]
             leader_id = leader_entry["id"] if isinstance(leader_entry, dict) else leader_entry
-            
+
+            session_time = get_next_study_time()
+            if not session_time:
+                return False
+
             for guild in bot.guilds:
                 member = guild.get_member(leader_id)
                 if member:
-                    tomorrow = datetime.now(BRISBANE_TZ) + timedelta(days=1)
-                    tomorrow_5pm = tomorrow.replace(hour=19, minute=30, second=0, microsecond=0)
-                    study_timestamp = int(tomorrow_5pm.timestamp())
+                    study_timestamp = int(session_time.timestamp())
                     asyncio.run_coroutine_threadsafe(
                         member.send(f"📖 Test Reminder (24h): You're leading Bible Study on <t:{study_timestamp}:F> (<t:{study_timestamp}:R>)!"),
                         bot.loop
@@ -1137,17 +1147,19 @@ def test_6h_reminder():
             current_schedule = load_schedule(None)
             if not current_schedule:
                 return False
-            
+
             leader_entry = current_schedule[0]
             leader_id = leader_entry["id"] if isinstance(leader_entry, dict) else leader_entry
-            
+
+            session_time = get_next_study_time()
+            if not session_time:
+                return False
+
             for guild in bot.guilds:
                 if guild.id == ALLOWED_GUILD_ID:
                     channel = guild.get_channel(REMINDER_CHANNEL_ID)
                     if channel:
-                        tomorrow = datetime.now(BRISBANE_TZ) + timedelta(days=1)
-                        tomorrow_5pm = tomorrow.replace(hour=19, minute=30, second=0, microsecond=0)
-                        study_timestamp = int(tomorrow_5pm.timestamp())
+                        study_timestamp = int(session_time.timestamp())
                         asyncio.run_coroutine_threadsafe(
                             channel.send(f"🧪 Test: <@{leader_id}> - Your Bible Study session is <t:{study_timestamp}:R> 📖"),
                             bot.loop

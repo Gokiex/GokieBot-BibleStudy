@@ -978,6 +978,31 @@
             if (upcomingElement) {
                 upcomingElement.textContent = leaderName;
             }
+
+            updateCurrentHighlight();
+        }
+
+        function updateCurrentHighlight() {
+            if (!scheduleList) return;
+
+            const items = Array.from(scheduleList.querySelectorAll('.schedule-item'));
+            items.forEach((item, index) => {
+                const badge = item.querySelector('.current-badge');
+
+                if (index === 0) {
+                    item.classList.add('current');
+                    if (!badge) {
+                        const removeBtn = item.querySelector('.remove-btn');
+                        const newBadge = document.createElement('span');
+                        newBadge.className = 'current-badge';
+                        newBadge.textContent = 'This Week';
+                        removeBtn.before(newBadge);
+                    }
+                } else {
+                    item.classList.remove('current');
+                    if (badge) badge.remove();
+                }
+            });
         }
         
         updateCountdown();
@@ -987,22 +1012,25 @@
         if (scheduleList) {
             let draggedItem = null;
             let originalScheduleState = null;
-            
+            let originalDateOrder = [];
+
             scheduleList.addEventListener('dragstart', (e) => {
                 if (e.target.classList.contains('schedule-item')) {
                     draggedItem = e.target;
                     e.target.classList.add('dragging');
                     e.dataTransfer.effectAllowed = 'move';
-                    
+
                     // Store original state before drag
-                    originalScheduleState = Array.from(scheduleList.querySelectorAll('.schedule-item')).map(item => ({
+                    const currentItems = Array.from(scheduleList.querySelectorAll('.schedule-item'));
+                    originalScheduleState = currentItems.map(item => ({
                         id: item.dataset.id,
                         name: item.dataset.name,
                         date: item.dataset.date
                     }));
+                    originalDateOrder = currentItems.map(item => item.dataset.date);
                 }
             });
-            
+
             scheduleList.addEventListener('dragend', (e) => {
                 if (e.target.classList.contains('schedule-item')) {
                     e.target.classList.remove('dragging');
@@ -1012,41 +1040,44 @@
                     draggedItem = null;
                 }
             });
-            
+
             scheduleList.addEventListener('dragover', (e) => {
                 e.preventDefault();
+                if (!draggedItem) return;
+
                 const afterElement = getDragAfterElement(scheduleList, e.clientY);
-                
+
                 document.querySelectorAll('.schedule-item').forEach(item => {
                     item.classList.remove('drag-over');
                 });
-                
+
                 if (afterElement) {
                     afterElement.classList.add('drag-over');
+                    scheduleList.insertBefore(draggedItem, afterElement);
+                } else {
+                    scheduleList.appendChild(draggedItem);
                 }
             });
-            
+
             scheduleList.addEventListener('drop', (e) => {
                 e.preventDefault();
-                const afterElement = getDragAfterElement(scheduleList, e.clientY);
                 const dragging = document.querySelector('.dragging');
-                
+
                 if (dragging && originalScheduleState) {
-                    if (afterElement) {
-                        scheduleList.insertBefore(dragging, afterElement);
-                    } else {
-                        scheduleList.appendChild(dragging);
-                    }
-                    
-                    // Map new positions to original dates in those positions
                     const items = scheduleList.querySelectorAll('.schedule-item');
+                    const dateOrder =
+                        originalDateOrder.length === items.length ? originalDateOrder : Array.from(items).map(item => item.dataset.date);
+
+                    // Map new positions to original dates in those positions
                     items.forEach((item, index) => {
-                        const newDate = originalScheduleState[index].date;
+                        const newDate = dateOrder[index];
                         item.dataset.date = newDate;
                         item.querySelector('.week-number').textContent = newDate;
                     });
-                    
-                    saveNewOrder();
+
+                    document.querySelectorAll('.schedule-item').forEach(item => item.classList.remove('drag-over'));
+                    dragging.classList.remove('dragging');
+                    saveNewOrder(dateOrder);
                     originalScheduleState = null;
                     updateUpcomingLeader();
                 }
@@ -1088,12 +1119,15 @@
             });
         }
         
-        function saveNewOrder() {
+        function saveNewOrder(dateOrder = null) {
             const items = scheduleList.querySelectorAll('.schedule-item');
             const currentItems = Array.from(scheduleList.querySelectorAll('.schedule-item'));
-            
-            // Get original dates in current order
-            const originalDates = currentItems.map(item => item.dataset.date);
+
+            // Get original dates in current order or use provided order
+            const originalDates =
+                dateOrder && dateOrder.length === currentItems.length
+                    ? dateOrder
+                    : currentItems.map(item => item.dataset.date);
             
             // Build new order with names/IDs in new positions, but keep dates in position order
             const newOrder = [];
