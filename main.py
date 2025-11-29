@@ -517,15 +517,16 @@ async def send_24h_reminders():
     """Send DM reminders to leaders 24 hours before their session."""
     global last_reminder_date
     now = datetime.now(BRISBANE_TZ)
-    
-    if last_reminder_date == now.date():
+
+    next_study = get_next_study_time()
+
+    # Prevent multiple sends for the same study date
+    if last_reminder_date == next_study.date():
         return
-    
+
     try:
-        tomorrow = now + timedelta(days=1)
-        tomorrow_5pm = tomorrow.replace(hour=19, minute=30, second=0, microsecond=0)
-        time_until = (tomorrow_5pm - now).total_seconds()
-        
+        time_until = (next_study - now).total_seconds()
+
         if 23 * 3600 < time_until < 25 * 3600:
             for guild in bot.guilds:
                 current_schedule = load_schedule(None)
@@ -533,15 +534,15 @@ async def send_24h_reminders():
                     leader_entry = current_schedule[0]
                     leader_id = leader_entry["id"] if isinstance(leader_entry, dict) else leader_entry
                     leader_name = leader_entry.get("name", "Leader") if isinstance(leader_entry, dict) else "Leader"
-                    
+
                     member = guild.get_member(leader_id)
                     if member:
                         try:
                             # Use Discord timestamp (shows in user's local timezone)
-                            study_timestamp = int(tomorrow_5pm.timestamp())
+                            study_timestamp = int(next_study.timestamp())
                             await member.send(f"📖 Reminder: You're leading Bible Study on <t:{study_timestamp}:F> (<t:{study_timestamp}:R>)!")
                             log_dm(leader_id, member.display_name, "24h_reminder", "sent")
-                            last_reminder_date = now.date()
+                            last_reminder_date = next_study.date()
                         except Exception as e:
                             log_dm(leader_id, leader_name, "24h_reminder", "failed")
                             print(f"Could not DM {member}: {e}")
@@ -552,15 +553,14 @@ async def send_6h_reminders():
     """Send channel ping reminders to leaders 6 hours before their session."""
     global last_6h_reminder_time
     now = datetime.now(BRISBANE_TZ)
-    
+
     if last_6h_reminder_time and (now - last_6h_reminder_time).total_seconds() < 3600:
         return
-    
+
     try:
-        tomorrow = now + timedelta(days=1)
-        tomorrow_5pm = tomorrow.replace(hour=19, minute=30, second=0, microsecond=0)
-        time_until = (tomorrow_5pm - now).total_seconds()
-        
+        next_study = get_next_study_time()
+        time_until = (next_study - now).total_seconds()
+
         if 5.5 * 3600 < time_until < 6.5 * 3600:
             for guild in bot.guilds:
                 if guild.id == ALLOWED_GUILD_ID:
@@ -572,7 +572,7 @@ async def send_6h_reminders():
                         channel = guild.get_channel(REMINDER_CHANNEL_ID)
                         if channel:
                             try:
-                                study_timestamp = int(tomorrow_5pm.timestamp())
+                                study_timestamp = int(next_study.timestamp())
                                 member = guild.get_member(leader_id)
                                 member_name = member.display_name if member else "Unknown"
                                 await channel.send(f"<@{leader_id}> - Your Bible Study session is <t:{study_timestamp}:R> 📖")
@@ -883,16 +883,15 @@ def test_24h_reminder():
             current_schedule = load_schedule(None)
             if not current_schedule:
                 return False
-            
+
             leader_entry = current_schedule[0]
             leader_id = leader_entry["id"] if isinstance(leader_entry, dict) else leader_entry
-            
+
             for guild in bot.guilds:
                 member = guild.get_member(leader_id)
                 if member:
-                    tomorrow = datetime.now(BRISBANE_TZ) + timedelta(days=1)
-                    tomorrow_5pm = tomorrow.replace(hour=19, minute=30, second=0, microsecond=0)
-                    study_timestamp = int(tomorrow_5pm.timestamp())
+                    next_study = get_next_study_time()
+                    study_timestamp = int(next_study.timestamp())
                     asyncio.run_coroutine_threadsafe(
                         member.send(f"📖 Test Reminder (24h): You're leading Bible Study on <t:{study_timestamp}:F> (<t:{study_timestamp}:R>)!"),
                         bot.loop
@@ -1145,9 +1144,8 @@ def test_6h_reminder():
                 if guild.id == ALLOWED_GUILD_ID:
                     channel = guild.get_channel(REMINDER_CHANNEL_ID)
                     if channel:
-                        tomorrow = datetime.now(BRISBANE_TZ) + timedelta(days=1)
-                        tomorrow_5pm = tomorrow.replace(hour=19, minute=30, second=0, microsecond=0)
-                        study_timestamp = int(tomorrow_5pm.timestamp())
+                        next_study = get_next_study_time()
+                        study_timestamp = int(next_study.timestamp())
                         asyncio.run_coroutine_threadsafe(
                             channel.send(f"🧪 Test: <@{leader_id}> - Your Bible Study session is <t:{study_timestamp}:R> 📖"),
                             bot.loop
