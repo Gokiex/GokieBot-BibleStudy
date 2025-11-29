@@ -1003,11 +1003,33 @@
                 upcomingElement.textContent = leaderName;
             }
         }
-        
+
+        function updateCurrentHighlight() {
+            if (!scheduleList) return;
+
+            getScheduleItems().forEach((item, index) => {
+                item.classList.remove('current');
+                const badge = item.querySelector('.current-badge');
+                if (badge) badge.remove();
+
+                if (index === 0) {
+                    item.classList.add('current');
+                    const removeBtn = item.querySelector('.remove-btn');
+                    if (removeBtn) {
+                        const newBadge = document.createElement('span');
+                        newBadge.className = 'current-badge';
+                        newBadge.textContent = 'This Week';
+                        removeBtn.before(newBadge);
+                    }
+                }
+            });
+        }
+
         updateCountdown();
         updateUpcomingLeader();
+        updateCurrentHighlight();
         setInterval(updateCountdown, 1000);
-        
+
         if (scheduleList) {
             let draggedItem = null;
             let originalScheduleState = null;
@@ -1087,6 +1109,7 @@
                     saveNewOrder();
                     originalScheduleState = null;
                     updateUpcomingLeader();
+                    updateCurrentHighlight();
                     resetDragUI();
                 }
             });
@@ -1350,6 +1373,7 @@
                             location.reload();
                         } else {
                             updateUpcomingLeader();
+                            updateCurrentHighlight();
                         }
                     }, 400);
                 } else {
