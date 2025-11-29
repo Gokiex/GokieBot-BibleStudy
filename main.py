@@ -192,11 +192,20 @@ def format_date(date):
     return date.strftime("%a %d/%m").replace("Sat", "Sat").replace("Sun", "Sun").replace("Mon", "Mon").replace("Tue", "Tue").replace("Wed", "Wed").replace("Thu", "Thu").replace("Fri", "Fri")
 
 def parse_date_string(date_str):
-    """Parse 'Sat 29/11' to actual date in 2025."""
+    """Parse 'Sat 29/11' into the next matching Brisbane datetime."""
     try:
         day, month = date_str.split()[-1].split('/')
-        return datetime(2025, int(month), int(day), STUDY_HOUR, STUDY_MINUTE, 0)
-    except:
+        now = datetime.now(BRISBANE_TZ)
+        year = now.year
+
+        target = BRISBANE_TZ.localize(datetime(year, int(month), int(day), STUDY_HOUR, STUDY_MINUTE, 0))
+
+        # If the date has already passed this year, roll to next year
+        if target < now:
+            target = BRISBANE_TZ.localize(datetime(year + 1, int(month), int(day), STUDY_HOUR, STUDY_MINUTE, 0))
+
+        return target
+    except Exception:
         return None
 
 def get_next_study_time():
@@ -210,7 +219,6 @@ def get_next_study_time():
         if isinstance(first_entry, dict) and "date" in first_entry:
             scheduled_date = parse_date_string(first_entry["date"])
             if scheduled_date:
-                scheduled_date = BRISBANE_TZ.localize(scheduled_date)
                 if scheduled_date > now:
                     return scheduled_date
     
@@ -280,7 +288,57 @@ def find_user_index(schedule_list, user_id):
 
 intents = discord.Intents.default()
 intents.members = True
+intents.presences = True
 bot = commands.Bot(command_prefix="!", intents=intents)
+
+
+async def advance_schedule_if_needed():
+    """Rotate the schedule once the current session time has passed."""
+    schedule = load_schedule(None)
+    if not schedule:
+        return
+
+    changed = False
+    now = datetime.now(BRISBANE_TZ)
+
+    while schedule:
+        first_entry = schedule[0]
+        if isinstance(first_entry, dict):
+            first_date_str = first_entry.get("date", format_date(get_date_for_week(0)))
+        else:
+            first_date_str = format_date(get_date_for_week(0))
+
+        scheduled_date = parse_date_string(first_date_str)
+        if not scheduled_date:
+            break
+
+        if now >= scheduled_date:
+            completed = schedule.pop(0)
+
+            # Determine the next available date slot (one week after the last scheduled date)
+            if schedule:
+                last_entry = schedule[-1]
+                last_date_str = last_entry.get("date", first_date_str) if isinstance(last_entry, dict) else first_date_str
+                last_date = parse_date_string(last_date_str) or scheduled_date
+            else:
+                last_date = scheduled_date
+
+            next_slot_date = last_date + timedelta(days=7)
+            next_slot_str = format_date(next_slot_date)
+
+            if isinstance(completed, dict):
+                completed["date"] = next_slot_str
+            else:
+                completed = {"id": completed, "name": None, "date": next_slot_str}
+
+            schedule.append(completed)
+            changed = True
+        else:
+            break
+
+    if changed:
+        save_schedule(schedule, None)
+        await update_all_schedule_messages()
 
 async def refresh_member_names(guild: discord.Guild):
     """Refresh all member names in the schedule from Discord."""
@@ -652,6 +710,7 @@ async def on_ready():
     async def reminder_loop():
         while True:
             await asyncio.sleep(60)
+            await advance_schedule_if_needed()
             await send_24h_reminders()
             await send_6h_reminders()
     
@@ -780,9 +839,39 @@ def get_members():
                     members_list.append({
                         "id": str(member.id),
                         "name": member.display_name,
-                        "username": str(member)
+                        "username": str(member),
+                        "status": str(getattr(member, "status", "offline")),
+                        "avatar": str(member.display_avatar.url) if member.display_avatar else None
                     })
         
+        members_list.sort(key=lambda x: x["name"].lower())
+        return jsonify({"success": True, "members": members_list})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e), "members": []})
+
+
+@app.route('/api/server-members')
+def get_server_members():
+    """Return all non-bot members with profile pictures and status."""
+    try:
+        members_list = []
+
+        for guild in bot.guilds:
+            for member in guild.members:
+                if member.bot:
+                    continue
+
+                status = str(getattr(member, "status", "offline"))
+                avatar_url = str(member.display_avatar.url) if member.display_avatar else None
+
+                members_list.append({
+                    "id": str(member.id),
+                    "name": member.display_name,
+                    "username": str(member),
+                    "status": status,
+                    "avatar": avatar_url
+                })
+
         members_list.sort(key=lambda x: x["name"].lower())
         return jsonify({"success": True, "members": members_list})
     except Exception as e:
