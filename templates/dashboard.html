@@ -550,6 +550,20 @@
             font-size: 0.95rem;
             background: #fdfdff;
         }
+        .directory-toggle {
+            padding: 8px 12px;
+            border-radius: 10px;
+            border: 1px solid #dfe2ff;
+            background: #f2f4ff;
+            color: #4a53e2;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .directory-toggle:hover {
+            background: #e6e9ff;
+            box-shadow: 0 6px 16px rgba(102, 126, 234, 0.15);
+        }
         .directory-search:focus {
             outline: none;
             border-color: #667eea;
@@ -558,6 +572,9 @@
         .directory-summary {
             color: #666;
             font-size: 0.9rem;
+        }
+        .directory-content {
+            margin-top: 10px;
         }
         .ios-picker {
             position: relative;
@@ -584,7 +601,7 @@
             height: 100%;
             overflow-y: auto;
             scroll-snap-type: y mandatory;
-            padding: 50px 16px;
+            padding: 98px 16px;
         }
         .picker-item {
             height: 44px;
@@ -926,14 +943,19 @@
                 <div style="font-size: 2.5rem; font-weight: bold; color: #667eea;" id="upcomingLeader">--</div>
             </div>
 
-            <div class="card" style="padding: 20px; margin: 10px 0;">
+            <div class="card" id="serverMemberCard" style="padding: 20px; margin: 10px 0;">
                 <div class="directory-actions">
-                    <h2 style="margin: 0; border: none; padding: 0;">Server Members</h2>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <h2 style="margin: 0; border: none; padding: 0;">Server Members</h2>
+                        <button id="directoryToggle" class="directory-toggle" onclick="toggleDirectoryVisibility()" aria-expanded="true">Hide</button>
+                    </div>
                     <span class="directory-summary" id="memberSummary">Loading...</span>
                 </div>
-                <input type="text" class="directory-search" id="directorySearch" placeholder="Search by name or username" oninput="filterDirectory()">
-                <div id="memberDirectory" class="member-grid" style="margin-top: 14px; min-height: 80px;">
-                    <div class="loading"><div class="loading-spinner"></div></div>
+                <div id="directoryContent" class="directory-content">
+                    <input type="text" class="directory-search" id="directorySearch" placeholder="Search by name or username" oninput="filterDirectory()">
+                    <div id="memberDirectory" class="member-grid" style="margin-top: 14px; min-height: 80px;">
+                        <div class="loading"><div class="loading-spinner"></div></div>
+                    </div>
                 </div>
             </div>
 
@@ -1030,6 +1052,9 @@
         const memberDirectory = document.getElementById('memberDirectory');
         const memberSummary = document.getElementById('memberSummary');
         const directorySearch = document.getElementById('directorySearch');
+        const directoryContent = document.getElementById('directoryContent');
+        const directoryToggle = document.getElementById('directoryToggle');
+        let isDirectoryVisible = true;
         const dateWheel = document.getElementById('dateWheel');
         const DATE_ITEM_HEIGHT = 44;
         let dateOptions = [];
@@ -1493,6 +1518,15 @@
                     </div>
                 </div>
             `).join('');
+        }
+
+        function toggleDirectoryVisibility() {
+            if (!directoryContent || !directoryToggle) return;
+
+            isDirectoryVisible = !isDirectoryVisible;
+            directoryContent.style.display = isDirectoryVisible ? 'block' : 'none';
+            directoryToggle.textContent = isDirectoryVisible ? 'Hide' : 'Show';
+            directoryToggle.setAttribute('aria-expanded', String(isDirectoryVisible));
         }
 
         function loadServerMembers() {
