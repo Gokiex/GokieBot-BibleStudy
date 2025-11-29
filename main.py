@@ -208,6 +208,10 @@ def parse_date_string(date_str):
     except Exception:
         return None
 
+def has_past_study_time(now):
+    """Return True when the study time for the given day has already passed."""
+    return now.hour > STUDY_HOUR or (now.hour == STUDY_HOUR and now.minute >= STUDY_MINUTE)
+
 def get_next_study_time():
     """Get the next Bible study time (7:30 PM Brisbane time)."""
     now = datetime.now(BRISBANE_TZ)
@@ -221,13 +225,11 @@ def get_next_study_time():
             if scheduled_date:
                 if scheduled_date > now:
                     return scheduled_date
-    
+
     # Fallback: Find the next Saturday
     days_until_saturday = (5 - now.weekday()) % 7
-    if days_until_saturday == 0 and now.hour >= STUDY_HOUR and now.minute >= STUDY_MINUTE:
+    if days_until_saturday == 0 and has_past_study_time(now):
         days_until_saturday = 7
-    elif days_until_saturday == 0:
-        days_until_saturday = 0
     
     next_study = now + timedelta(days=days_until_saturday)
     next_study = next_study.replace(hour=STUDY_HOUR, minute=STUDY_MINUTE, second=0, microsecond=0)
@@ -246,7 +248,7 @@ def get_next_schedule_date(schedule):
             return last_date + timedelta(days=7)
 
     days_until_saturday = (5 - now.weekday()) % 7
-    if days_until_saturday == 0 and (now.hour > STUDY_HOUR or (now.hour == STUDY_HOUR and now.minute >= STUDY_MINUTE)):
+    if days_until_saturday == 0 and has_past_study_time(now):
         days_until_saturday = 7
 
     next_saturday = now + timedelta(days=days_until_saturday)
