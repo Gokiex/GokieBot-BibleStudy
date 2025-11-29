@@ -551,18 +551,54 @@
             background: #fdfdff;
         }
         .directory-toggle {
+
+            padding: 8px;
+            width: 36px;
+            height: 36px;
+=======
             padding: 8px 12px;
+
             border-radius: 10px;
             border: 1px solid #dfe2ff;
             background: #f2f4ff;
             color: #4a53e2;
             font-weight: 600;
             cursor: pointer;
+
+            transition: all 0.25s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.08);
+=======
             transition: all 0.2s ease;
+
         }
         .directory-toggle:hover {
             background: #e6e9ff;
             box-shadow: 0 6px 16px rgba(102, 126, 234, 0.15);
+
+            transform: translateY(-1px);
+        }
+        .directory-arrow {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.25s ease;
+            font-size: 1.1rem;
+        }
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0,0,0,0);
+            white-space: nowrap;
+            border: 0;
+=======
+
         }
         .directory-search:focus {
             outline: none;
@@ -575,6 +611,20 @@
         }
         .directory-content {
             margin-top: 10px;
+
+            overflow: hidden;
+            max-height: 1200px;
+            opacity: 1;
+            transform: translateY(0);
+            transition: max-height 0.35s ease, opacity 0.25s ease, transform 0.35s ease;
+        }
+        .directory-content.collapsed {
+            max-height: 0;
+            opacity: 0;
+            transform: translateY(-8px);
+            pointer-events: none;
+=======
+
         }
         .ios-picker {
             position: relative;
@@ -947,7 +997,14 @@
                 <div class="directory-actions">
                     <div style="display: flex; align-items: center; gap: 10px;">
                         <h2 style="margin: 0; border: none; padding: 0;">Server Members</h2>
+
+                        <button id="directoryToggle" class="directory-toggle" onclick="toggleDirectoryVisibility()" aria-expanded="true" aria-controls="directoryContent" aria-label="Toggle server member list" type="button">
+                            <span id="directoryArrow" class="directory-arrow">▼</span>
+                            <span class="sr-only">Toggle member list</span>
+                        </button>
+=======
                         <button id="directoryToggle" class="directory-toggle" onclick="toggleDirectoryVisibility()" aria-expanded="true">Hide</button>
+
                     </div>
                     <span class="directory-summary" id="memberSummary">Loading...</span>
                 </div>
@@ -1054,6 +1111,10 @@
         const directorySearch = document.getElementById('directorySearch');
         const directoryContent = document.getElementById('directoryContent');
         const directoryToggle = document.getElementById('directoryToggle');
+
+        const directoryArrow = document.getElementById('directoryArrow');
+=======
+
         let isDirectoryVisible = true;
         const dateWheel = document.getElementById('dateWheel');
         const DATE_ITEM_HEIGHT = 44;
@@ -1221,6 +1282,7 @@
         updateUpcomingLeader();
         updateCurrentHighlight();
         setInterval(updateCountdown, 1000);
+        applyDirectoryVisibility();
         loadServerMembers();
 
         if (scheduleList) {
@@ -1502,6 +1564,7 @@
             if (!members.length) {
                 memberDirectory.innerHTML = '<div class="no-members">No members match your search</div>';
                 memberSummary.textContent = '0 members';
+                applyDirectoryVisibility();
                 return;
             }
 
@@ -1518,6 +1581,27 @@
                     </div>
                 </div>
             `).join('');
+
+            applyDirectoryVisibility();
+        }
+
+        function applyDirectoryVisibility() {
+            if (!directoryContent || !directoryToggle) return;
+
+            directoryContent.classList.toggle('collapsed', !isDirectoryVisible);
+            directoryContent.style.maxHeight = isDirectoryVisible ? `${directoryContent.scrollHeight}px` : '0px';
+            if (directoryArrow) {
+                directoryArrow.style.transform = isDirectoryVisible ? 'rotate(0deg)' : 'rotate(-90deg)';
+            }
+            directoryToggle.setAttribute('aria-expanded', String(isDirectoryVisible));
+            directoryToggle.setAttribute('aria-label', isDirectoryVisible ? 'Hide server member list' : 'Show server member list');
+        }
+
+        function toggleDirectoryVisibility() {
+            if (!directoryContent || !directoryToggle) return;
+
+            isDirectoryVisible = !isDirectoryVisible;
+            applyDirectoryVisibility();
         }
 
         function toggleDirectoryVisibility() {
