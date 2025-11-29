@@ -254,6 +254,24 @@ def get_next_schedule_date(schedule):
     next_saturday = now + timedelta(days=days_until_saturday)
     return next_saturday.replace(hour=STUDY_HOUR, minute=STUDY_MINUTE, second=0, microsecond=0)
 
+
+def get_next_schedule_date(schedule):
+    """Return the next available Saturday at the study time for a new schedule entry."""
+    now = datetime.now(BRISBANE_TZ)
+
+    if schedule:
+        last_entry = schedule[-1]
+        last_date = parse_date_string(last_entry.get("date", "")) if isinstance(last_entry, dict) else None
+        if last_date:
+            return last_date + timedelta(days=7)
+
+    days_until_saturday = (5 - now.weekday()) % 7
+    if days_until_saturday == 0 and has_past_study_time(now):
+        days_until_saturday = 7
+
+    next_saturday = now + timedelta(days=days_until_saturday)
+    return next_saturday.replace(hour=STUDY_HOUR, minute=STUDY_MINUTE, second=0, microsecond=0)
+
 def get_countdown():
     """Get countdown in seconds to next study time."""
     now = datetime.now(BRISBANE_TZ)

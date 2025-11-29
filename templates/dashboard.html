@@ -601,6 +601,45 @@
             white-space: nowrap;
             border: 0;
         }
+        .directory-toggle {
+            padding: 8px;
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            border: 1px solid #dfe2ff;
+            background: #f2f4ff;
+            color: #4a53e2;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.08);
+        }
+        .directory-toggle:hover {
+            background: #e6e9ff;
+            box-shadow: 0 6px 16px rgba(102, 126, 234, 0.15);
+            transform: translateY(-1px);
+        }
+        .directory-arrow {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.25s ease;
+            font-size: 1.1rem;
+        }
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0,0,0,0);
+            white-space: nowrap;
+            border: 0;
+        }
         .directory-search:focus {
             outline: none;
             border-color: #667eea;
