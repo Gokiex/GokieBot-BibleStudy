@@ -1013,10 +1013,12 @@
             let draggedItem = null;
             let originalScheduleState = null;
             let originalDateOrder = [];
+            let dropCompleted = false;
 
             scheduleList.addEventListener('dragstart', (e) => {
                 if (e.target.classList.contains('schedule-item')) {
                     draggedItem = e.target;
+                    dropCompleted = false;
                     e.target.classList.add('dragging');
                     e.dataTransfer.effectAllowed = 'move';
 
@@ -1037,6 +1039,27 @@
                     document.querySelectorAll('.schedule-item').forEach(item => {
                         item.classList.remove('drag-over');
                     });
+
+                    if (!dropCompleted && originalScheduleState) {
+                        const currentNodes = Array.from(scheduleList.querySelectorAll('.schedule-item'));
+                        const nodeById = new Map(currentNodes.map(node => [node.dataset.id, node]));
+
+                        scheduleList.innerHTML = '';
+                        originalScheduleState.forEach(({ id, date }) => {
+                            const node = nodeById.get(id);
+                            if (node) {
+                                node.dataset.date = date;
+                                const label = node.querySelector('.week-number');
+                                if (label) label.textContent = date;
+                                scheduleList.appendChild(node);
+                            }
+                        });
+
+                        updateUpcomingLeader();
+                    }
+
+                    originalScheduleState = null;
+                    originalDateOrder = [];
                     draggedItem = null;
                 }
             });
@@ -1078,7 +1101,9 @@
                     document.querySelectorAll('.schedule-item').forEach(item => item.classList.remove('drag-over'));
                     dragging.classList.remove('dragging');
                     saveNewOrder(dateOrder);
+                    dropCompleted = true;
                     originalScheduleState = null;
+                    originalDateOrder = [];
                     updateUpcomingLeader();
                 }
             });
