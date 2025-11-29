@@ -477,6 +477,148 @@
         .member-item:hover .member-add-icon {
             opacity: 1;
         }
+        .member-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            margin-right: 12px;
+            object-fit: cover;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+        }
+        .status-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 8px;
+            box-shadow: 0 0 0 3px rgba(0,0,0,0.04);
+        }
+        .status-online { background: #4caf50; }
+        .status-idle { background: #ffb020; }
+        .status-dnd { background: #e53935; }
+        .status-offline { background: #9e9e9e; }
+        .member-meta {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #777;
+            font-size: 0.85rem;
+        }
+        .member-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+        }
+        .member-card {
+            background: linear-gradient(145deg, #f9f9ff 0%, #ffffff 100%);
+            border: 1px solid #eef0ff;
+            border-radius: 12px;
+            padding: 14px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .member-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 24px rgba(0,0,0,0.08);
+        }
+        .member-card .member-avatar {
+            width: 48px;
+            height: 48px;
+        }
+        .member-card .member-name {
+            font-weight: 600;
+            color: #2d2d2d;
+            font-size: 1rem;
+        }
+        .member-card .member-username {
+            font-size: 0.85rem;
+        }
+        .directory-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            gap: 10px;
+        }
+        .directory-search {
+            flex: 1;
+            padding: 10px 12px;
+            border: 2px solid #eef0ff;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            background: #fdfdff;
+        }
+        .directory-search:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 6px 16px rgba(102, 126, 234, 0.15);
+        }
+        .directory-summary {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        .ios-picker {
+            position: relative;
+            height: 240px;
+            overflow: hidden;
+            border-radius: 12px;
+            background: linear-gradient(180deg, #f7f7f7 0%, #ffffff 100%);
+            border: 1px solid #ececec;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.8);
+        }
+        .picker-overlay {
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            height: 44px;
+            border-top: 1px solid #d9d9d9;
+            border-bottom: 1px solid #d9d9d9;
+            pointer-events: none;
+            background: linear-gradient(180deg, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.4) 100%);
+        }
+        .picker-list {
+            height: 100%;
+            overflow-y: auto;
+            scroll-snap-type: y mandatory;
+            padding: 50px 16px;
+        }
+        .picker-item {
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            color: #555;
+            scroll-snap-align: center;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+        .picker-item.active {
+            color: #4a53e2;
+            font-weight: 700;
+            background: rgba(102, 126, 234, 0.1);
+            box-shadow: 0 6px 18px rgba(102,126,234,0.12);
+        }
+        .picker-fade {
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 40px;
+            pointer-events: none;
+        }
+        .picker-fade.top {
+            top: 0;
+            background: linear-gradient(180deg, #ffffff 0%, rgba(255,255,255,0));
+        }
+        .picker-fade.bottom {
+            bottom: 0;
+            background: linear-gradient(0deg, #ffffff 0%, rgba(255,255,255,0));
+        }
         .search-input {
             width: 100%;
             padding: 12px 15px;
@@ -783,7 +925,18 @@
                 <h2 style="font-size: 1.2rem; color: #666; margin-bottom: 10px; font-weight: 500;">Upcoming Week</h2>
                 <div style="font-size: 2.5rem; font-weight: bold; color: #667eea;" id="upcomingLeader">--</div>
             </div>
-            
+
+            <div class="card" style="padding: 20px; margin: 10px 0;">
+                <div class="directory-actions">
+                    <h2 style="margin: 0; border: none; padding: 0;">Server Members</h2>
+                    <span class="directory-summary" id="memberSummary">Loading...</span>
+                </div>
+                <input type="text" class="directory-search" id="directorySearch" placeholder="Search by name or username" oninput="filterDirectory()">
+                <div id="memberDirectory" class="member-grid" style="margin-top: 14px; min-height: 80px;">
+                    <div class="loading"><div class="loading-spinner"></div></div>
+                </div>
+            </div>
+
             <div class="header-row">
                 <h2>Leader Rotation</h2>
                 <div class="btn-group">
@@ -840,19 +993,24 @@
         </div>
     </div>
     
-    <div class="modal-overlay" id="editDateModal">
+        <div class="modal-overlay" id="editDateModal">
         <div class="modal">
             <button class="modal-close" onclick="closeEditDateModal()">&times;</button>
             <h3>Change Date</h3>
             <p id="editDateLeaderName" style="color: #666; margin-bottom: 20px;"></p>
-            <input type="date" id="editDateInput" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 1rem; margin-bottom: 20px;">
+            <div class="ios-picker">
+                <div class="picker-fade top"></div>
+                <div class="picker-overlay"></div>
+                <div class="picker-fade bottom"></div>
+                <div class="picker-list" id="dateWheel"></div>
+            </div>
+            <p style="text-align: center; color: #777; margin: 12px 0 18px;">Scroll to choose a new study date (7:30 PM)</p>
             <div style="display: flex; gap: 10px;">
                 <button onclick="saveEditDate()" style="flex: 1; padding: 12px; background: #667eea; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">Save</button>
-                <button onclick="closeEditDateModal()" style="flex: 1; padding: 12px; background: #f0f0f0; color: #333; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">Cancel</button>
+                <button onclick="closeEditDateModal()" style="flex: 1; padding: 12px; background: #f0f0f0; color: #333; border:none; border-radius: 8px; cursor: pointer; font-weight: 600;">Cancel</button>
             </div>
         </div>
     </div>
-    
     <div class="save-status" id="saveStatus"></div>
     
     <script>
@@ -865,8 +1023,17 @@
         const schedulePlaceholder = document.createElement('li');
         schedulePlaceholder.className = 'schedule-item drag-placeholder';
         schedulePlaceholder.innerHTML = '<div class="placeholder-bar"></div>';
-        
+
         let allMembers = [];
+        let serverMembers = [];
+        let filteredDirectory = [];
+        const memberDirectory = document.getElementById('memberDirectory');
+        const memberSummary = document.getElementById('memberSummary');
+        const directorySearch = document.getElementById('directorySearch');
+        const dateWheel = document.getElementById('dateWheel');
+        const DATE_ITEM_HEIGHT = 44;
+        let dateOptions = [];
+        let selectedDateValue = null;
         
         function checkAuthStatus() {
             fetch('/api/check-login')
@@ -1029,6 +1196,7 @@
         updateUpcomingLeader();
         updateCurrentHighlight();
         setInterval(updateCountdown, 1000);
+        loadServerMembers();
 
         if (scheduleList) {
             let draggedItem = null;
@@ -1249,11 +1417,17 @@
                 memberList.innerHTML = '<li class="no-members">No available members to add</li>';
                 return;
             }
-            
+
             memberList.innerHTML = members.map(member => `
                 <li class="member-item" data-id="${member.id}" data-name="${escapeHtml(member.name)}">
-                    <span class="member-name">${escapeHtml(member.name)}</span>
-                    <span class="member-username">${escapeHtml(member.username)}</span>
+                    <img src="${member.avatar || 'https://cdn.discordapp.com/embed/avatars/0.png'}" alt="${escapeHtml(member.name)}" class="member-avatar">
+                    <div style="flex: 1;">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 2px;">
+                            <span class="member-name">${escapeHtml(member.name)}</span>
+                            <span class="member-meta"><span class="status-indicator ${getStatusClass(member.status)}"></span>${formatStatusLabel(member.status)}</span>
+                        </div>
+                        <span class="member-username">${escapeHtml(member.username)}</span>
+                    </div>
                     <span class="member-add-icon">+</span>
                 </li>
             `).join('');
@@ -1263,6 +1437,22 @@
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
+        }
+
+        function getStatusClass(status) {
+            const normalized = (status || 'offline').toLowerCase();
+            if (normalized.includes('online')) return 'status-online';
+            if (normalized.includes('idle')) return 'status-idle';
+            if (normalized.includes('dnd')) return 'status-dnd';
+            return 'status-offline';
+        }
+
+        function formatStatusLabel(status) {
+            const normalized = (status || 'offline').toLowerCase();
+            if (normalized.includes('online')) return 'Online';
+            if (normalized.includes('idle')) return 'Idle';
+            if (normalized.includes('dnd')) return 'Do Not Disturb';
+            return 'Offline';
         }
         
         memberList.addEventListener('click', (e) => {
@@ -1274,11 +1464,65 @@
         
         function filterMembers() {
             const search = memberSearch.value.toLowerCase();
-            const filtered = allMembers.filter(m => 
-                m.name.toLowerCase().includes(search) || 
+            const filtered = allMembers.filter(m =>
+                m.name.toLowerCase().includes(search) ||
                 m.username.toLowerCase().includes(search)
             );
             renderMembers(filtered);
+        }
+
+        function renderDirectory(members) {
+            if (!memberDirectory) return;
+
+            if (!members.length) {
+                memberDirectory.innerHTML = '<div class="no-members">No members match your search</div>';
+                memberSummary.textContent = '0 members';
+                return;
+            }
+
+            memberSummary.textContent = `${members.length} member${members.length === 1 ? '' : 's'}`;
+            memberDirectory.innerHTML = members.map(member => `
+                <div class="member-card">
+                    <img src="${member.avatar || 'https://cdn.discordapp.com/embed/avatars/0.png'}" alt="${escapeHtml(member.name)}" class="member-avatar">
+                    <div style="flex: 1;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <div class="member-name">${escapeHtml(member.name)}</div>
+                            <span class="member-meta"><span class="status-indicator ${getStatusClass(member.status)}"></span>${formatStatusLabel(member.status)}</span>
+                        </div>
+                        <div class="member-username">${escapeHtml(member.username)}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function loadServerMembers() {
+            if (!memberDirectory) return;
+            memberDirectory.innerHTML = '<div class="loading"><div class="loading-spinner"></div></div>';
+
+            fetch('/api/server-members')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        serverMembers = data.members;
+                        filteredDirectory = [...serverMembers];
+                        renderDirectory(filteredDirectory);
+                    } else {
+                        memberDirectory.innerHTML = '<div class="no-members">Error loading members</div>';
+                        memberSummary.textContent = 'Error';
+                    }
+                })
+                .catch(() => {
+                    memberDirectory.innerHTML = '<div class="no-members">Error loading members</div>';
+                    memberSummary.textContent = 'Error';
+                });
+        }
+
+        function filterDirectory() {
+            const term = (directorySearch?.value || '').toLowerCase();
+            filteredDirectory = serverMembers.filter(member =>
+                member.name.toLowerCase().includes(term) || member.username.toLowerCase().includes(term)
+            );
+            renderDirectory(filteredDirectory);
         }
         
         function addMember(id, name) {
@@ -1304,43 +1548,93 @@
         
         let editingDateElement = null;
         let editingDateId = null;
-        
+
+        function buildDateOptions() {
+            if (dateOptions.length) return dateOptions;
+
+            const today = new Date();
+            for (let i = 0; i < 200; i++) {
+                const d = new Date(today);
+                d.setDate(today.getDate() + i);
+                const day = `${d.getDate()}`.padStart(2, '0');
+                const month = `${d.getMonth() + 1}`.padStart(2, '0');
+                const value = `${d.toLocaleDateString('en-AU', { weekday: 'short' })} ${day}/${month}`;
+                const display = d.toLocaleDateString('en-AU', { weekday: 'short', day: '2-digit', month: 'short' });
+                dateOptions.push({ value, display });
+            }
+
+            return dateOptions;
+        }
+
+        function renderDateWheel(selectedValue) {
+            const options = buildDateOptions();
+
+            dateWheel.innerHTML = options.map(opt => `
+                <div class="picker-item ${opt.value === selectedValue ? 'active' : ''}" data-value="${opt.value}">${opt.display}</div>
+            `).join('');
+
+            const selectedIndex = Math.max(0, options.findIndex(opt => opt.value === selectedValue));
+            setActiveDate(selectedIndex);
+            dateWheel.scrollTop = selectedIndex * DATE_ITEM_HEIGHT;
+        }
+
+        function setActiveDate(index) {
+            const options = buildDateOptions();
+            const boundedIndex = Math.min(Math.max(index, 0), options.length - 1);
+            selectedDateValue = options[boundedIndex].value;
+
+            document.querySelectorAll('.picker-item').forEach((item, idx) => {
+                item.classList.toggle('active', idx === boundedIndex);
+            });
+        }
+
+        if (dateWheel) {
+            dateWheel.addEventListener('scroll', () => {
+                const index = Math.round(dateWheel.scrollTop / DATE_ITEM_HEIGHT);
+                setActiveDate(index);
+            });
+
+            dateWheel.addEventListener('click', (e) => {
+                const item = e.target.closest('.picker-item');
+                if (!item) return;
+                const index = Array.from(dateWheel.children).indexOf(item);
+                setActiveDate(index);
+                dateWheel.scrollTo({ top: index * DATE_ITEM_HEIGHT, behavior: 'smooth' });
+            });
+        }
+
         function editDate(element) {
             editingDateElement = element;
             const item = element.closest('.schedule-item');
             editingDateId = item.dataset.id;
             const name = item.dataset.name;
             const currentDate = element.textContent.trim();
-            
+
             document.getElementById('editDateLeaderName').textContent = `Change date for ${name}`;
-            document.getElementById('editDateInput').value = '';
             document.getElementById('editDateModal').classList.add('show');
-            document.getElementById('editDateInput').focus();
+            renderDateWheel(currentDate);
         }
-        
+
         function closeEditDateModal() {
             document.getElementById('editDateModal').classList.remove('show');
             editingDateElement = null;
             editingDateId = null;
+            selectedDateValue = null;
         }
-        
+
         function saveEditDate() {
-            const newDate = document.getElementById('editDateInput').value;
-            if (!newDate || !editingDateId) return;
-            
-            const dateObj = new Date(newDate);
-            const formatted = dateObj.toLocaleDateString('en-AU', { weekday: 'short', day: '2-digit', month: '2-digit' });
-            
+            if (!selectedDateValue || !editingDateId) return;
+
             fetch('/api/update-date', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id: editingDateId, date: formatted })
+                body: JSON.stringify({ id: editingDateId, date: selectedDateValue })
             })
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
-                    editingDateElement.textContent = formatted;
-                    editingDateElement.closest('.schedule-item').dataset.date = formatted;
+                    editingDateElement.textContent = selectedDateValue;
+                    editingDateElement.closest('.schedule-item').dataset.date = selectedDateValue;
                     showStatus('Date updated!', 'success');
                     closeEditDateModal();
                     updateCountdown();
