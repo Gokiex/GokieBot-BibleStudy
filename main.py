@@ -208,6 +208,10 @@ def parse_date_string(date_str):
     except Exception:
         return None
 
+def has_past_study_time(now):
+    """Return True when the study time for the given day has already passed."""
+    return now.hour > STUDY_HOUR or (now.hour == STUDY_HOUR and now.minute >= STUDY_MINUTE)
+
 def get_next_study_time():
     """Get the next Bible study time (7:30 PM Brisbane time)."""
     now = datetime.now(BRISBANE_TZ)
@@ -221,18 +225,36 @@ def get_next_study_time():
             if scheduled_date:
                 if scheduled_date > now:
                     return scheduled_date
-    
+
     # Fallback: Find the next Saturday
     days_until_saturday = (5 - now.weekday()) % 7
-    if days_until_saturday == 0 and now.hour >= STUDY_HOUR and now.minute >= STUDY_MINUTE:
+    if days_until_saturday == 0 and has_past_study_time(now):
         days_until_saturday = 7
     elif days_until_saturday == 0:
         days_until_saturday = 0
     
     next_study = now + timedelta(days=days_until_saturday)
     next_study = next_study.replace(hour=STUDY_HOUR, minute=STUDY_MINUTE, second=0, microsecond=0)
-    
+
     return next_study
+
+
+def get_next_schedule_date(schedule):
+    """Return the next available Saturday at the study time for a new schedule entry."""
+    now = datetime.now(BRISBANE_TZ)
+
+    if schedule:
+        last_entry = schedule[-1]
+        last_date = parse_date_string(last_entry.get("date", "")) if isinstance(last_entry, dict) else None
+        if last_date:
+            return last_date + timedelta(days=7)
+
+    days_until_saturday = (5 - now.weekday()) % 7
+    if days_until_saturday == 0 and has_past_study_time(now):
+        days_until_saturday = 7
+
+    next_saturday = now + timedelta(days=days_until_saturday)
+    return next_saturday.replace(hour=STUDY_HOUR, minute=STUDY_MINUTE, second=0, microsecond=0)
 
 def get_countdown():
     """Get countdown in seconds to next study time."""
@@ -541,7 +563,7 @@ async def add_user(interaction: discord.Interaction, user: discord.Member):
     
     schedule = load_schedule(None)
     
-    next_date = format_date(get_date_for_week(len(schedule)))
+    next_date = format_date(get_next_schedule_date(schedule))
     schedule.append({"id": user.id, "name": user.display_name, "date": next_date})
     save_schedule(schedule, None)
     text = await format_schedule(interaction.guild, None)
@@ -889,7 +911,7 @@ def api_add_user():
         if user_id in user_ids:
             return jsonify({"success": False, "error": "User already in schedule"})
         
-        schedule.append({"id": user_id, "name": user_name, "date": format_date(get_date_for_week(len(schedule)))})
+        schedule.append({"id": user_id, "name": user_name, "date": format_date(get_next_schedule_date(schedule))})
         save_schedule(schedule, None)
         trigger_discord_update()
         
