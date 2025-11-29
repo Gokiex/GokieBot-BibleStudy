@@ -983,7 +983,7 @@
                 <div class="directory-actions">
                     <div style="display: flex; align-items: center; gap: 10px;">
                         <h2 style="margin: 0; border: none; padding: 0;">Server Members</h2>
-                        <button id="directoryToggle" class="directory-toggle" onclick="toggleDirectoryVisibility()" aria-expanded="true" aria-label="Toggle server member list">
+                        <button id="directoryToggle" class="directory-toggle" onclick="toggleDirectoryVisibility()" aria-expanded="true" aria-controls="directoryContent" aria-label="Toggle server member list" type="button">
                             <span id="directoryArrow" class="directory-arrow">▼</span>
                             <span class="sr-only">Toggle member list</span>
                         </button>
@@ -1573,6 +1573,7 @@
                 directoryArrow.style.transform = isDirectoryVisible ? 'rotate(0deg)' : 'rotate(-90deg)';
             }
             directoryToggle.setAttribute('aria-expanded', String(isDirectoryVisible));
+            directoryToggle.setAttribute('aria-label', isDirectoryVisible ? 'Hide server member list' : 'Show server member list');
         }
 
         function toggleDirectoryVisibility() {
