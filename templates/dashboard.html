@@ -488,9 +488,12 @@
         .status-indicator {
             width: 10px;
             height: 10px;
+            flex: 0 0 10px;
+            aspect-ratio: 1;
             border-radius: 50%;
             margin-right: 8px;
             box-shadow: 0 0 0 3px rgba(0,0,0,0.04);
+            display: inline-block;
         }
         .status-online { background: #4caf50; }
         .status-idle { background: #ffb020; }
@@ -535,6 +538,14 @@
         .member-card .member-username {
             font-size: 0.85rem;
         }
+        .directory-card {
+            background: linear-gradient(145deg, #f4f5ff 0%, #eef2ff 100%);
+            border: 1px solid #e3e7ff;
+            box-shadow: 0 12px 30px rgba(102, 126, 234, 0.1);
+            border-radius: 14px;
+            padding: 20px;
+            margin: 10px 0;
+        }
         .directory-actions {
             display: flex;
             justify-content: space-between;
@@ -544,11 +555,51 @@
         }
         .directory-search {
             flex: 1;
-            padding: 10px 12px;
-            border: 2px solid #eef0ff;
-            border-radius: 10px;
+            padding: 12px 14px;
+            border: 1px solid #e1e5ff;
+            border-radius: 12px;
             font-size: 0.95rem;
-            background: #fdfdff;
+            background: rgba(255, 255, 255, 0.8);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.8);
+        }
+        .directory-toggle {
+            padding: 10px;
+            width: 38px;
+            height: 38px;
+            border-radius: 12px;
+            border: 1px solid #d8ddff;
+            background: linear-gradient(180deg, #ffffff 0%, #eef1ff 100%);
+            color: #4a53e2;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 6px 18px rgba(102, 126, 234, 0.12);
+        }
+        .directory-toggle:hover {
+            background: linear-gradient(180deg, #f7f8ff 0%, #e4e8ff 100%);
+            box-shadow: 0 10px 22px rgba(102, 126, 234, 0.2);
+            transform: translateY(-2px);
+        }
+        .directory-arrow {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.25s ease;
+            font-size: 1.1rem;
+        }
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0,0,0,0);
+            white-space: nowrap;
+            border: 0;
         }
         .directory-toggle {
             padding: 8px;
@@ -605,12 +656,42 @@
             opacity: 1;
             transform: translateY(0);
             transition: max-height 0.35s ease, opacity 0.25s ease, transform 0.35s ease;
+            background: rgba(255, 255, 255, 0.6);
+            border: 1px solid #e6e9ff;
+            border-radius: 12px;
+            padding: 12px;
         }
         .directory-content.collapsed {
             max-height: 0;
             opacity: 0;
             transform: translateY(-8px);
             pointer-events: none;
+            padding: 0 12px;
+        }
+        .live-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #eef2ff;
+            color: #4a53e2;
+            padding: 8px 12px;
+            border-radius: 999px;
+            font-weight: 600;
+            box-shadow: 0 6px 18px rgba(102, 126, 234, 0.15);
+            border: 1px solid #dfe4ff;
+        }
+        .live-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #43d674;
+            box-shadow: 0 0 0 0 rgba(67, 214, 116, 0.4);
+            animation: pulse 1.8s infinite;
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(67, 214, 116, 0.4); }
+            70% { box-shadow: 0 0 0 12px rgba(67, 214, 116, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(67, 214, 116, 0); }
         }
         .ios-picker {
             position: relative;
@@ -979,18 +1060,18 @@
                 <div style="font-size: 2.5rem; font-weight: bold; color: #667eea;" id="upcomingLeader">--</div>
             </div>
 
-            <div class="card" id="serverMemberCard" style="padding: 20px; margin: 10px 0;">
+            <div class="directory-card" id="serverMemberCard">
                 <div class="directory-actions">
                     <div style="display: flex; align-items: center; gap: 10px;">
                         <h2 style="margin: 0; border: none; padding: 0;">Server Members</h2>
-                        <button id="directoryToggle" class="directory-toggle" onclick="toggleDirectoryVisibility()" aria-expanded="true" aria-controls="directoryContent" aria-label="Toggle server member list" type="button">
-                            <span id="directoryArrow" class="directory-arrow">▼</span>
+                        <button id="directoryToggle" class="directory-toggle" onclick="toggleDirectoryVisibility()" aria-expanded="false" aria-controls="directoryContent" aria-label="Show server member list" type="button">
+                            <span id="directoryArrow" class="directory-arrow" style="transform: rotate(-90deg);">▼</span>
                             <span class="sr-only">Toggle member list</span>
                         </button>
                     </div>
                     <span class="directory-summary" id="memberSummary">Loading...</span>
                 </div>
-                <div id="directoryContent" class="directory-content">
+                <div id="directoryContent" class="directory-content collapsed">
                     <input type="text" class="directory-search" id="directorySearch" placeholder="Search by name or username" oninput="filterDirectory()">
                     <div id="memberDirectory" class="member-grid" style="margin-top: 14px; min-height: 80px;">
                         <div class="loading"><div class="loading-spinner"></div></div>
@@ -1001,36 +1082,35 @@
             <div class="header-row">
                 <h2>Leader Rotation</h2>
                 <div class="btn-group">
+                    <span class="live-pill"><span class="live-dot"></span> Live</span>
                     <button class="btn btn-success" onclick="openAddModal()">+ Add Leader</button>
-                    <a href="/" class="btn">Refresh</a>
                 </div>
             </div>
-            
-            {% if schedule %}
-            <p class="drag-hint">Drag to reorder the schedule</p>
-            <ul class="schedule-list" id="scheduleList">
-                {% for leader in schedule %}
-                <li class="schedule-item {% if loop.first %}current{% endif %}" 
-                    draggable="true" 
-                    data-id="{{ leader.id }}"
-                    data-name="{{ leader.name | e }}"
-                    data-date="{{ leader.date }}">
-                    <span class="drag-handle">&#9776;</span>
-                    <span class="week-number editable-date" onclick="editDate(this)" title="Click to change date" style="cursor: pointer;">{{ leader.date }}</span>
-                    <span class="leader-name">{{ leader.name }}</span>
-                    {% if loop.first %}
-                    <span class="current-badge">This Week</span>
-                    {% endif %}
-                    <button class="remove-btn" title="Remove">&#10005;</button>
-                </li>
-                {% endfor %}
-            </ul>
-            {% else %}
-            <div class="empty-state">
+
+            <div id="scheduleListWrapper" style="display: {% if schedule %}block{% else %}none{% endif %};">
+                <p class="drag-hint">Drag to reorder the schedule</p>
+                <ul class="schedule-list" id="scheduleList">
+                    {% for leader in schedule %}
+                    <li class="schedule-item {% if loop.first %}current{% endif %}"
+                        draggable="true"
+                        data-id="{{ leader.id }}"
+                        data-name="{{ leader.name | e }}"
+                        data-date="{{ leader.date }}">
+                        <span class="drag-handle">&#9776;</span>
+                        <span class="week-number editable-date" onclick="editDate(this)" title="Click to change date" style="cursor: pointer;">{{ leader.date }}</span>
+                        <span class="leader-name">{{ leader.name }}</span>
+                        {% if loop.first %}
+                        <span class="current-badge">This Week</span>
+                        {% endif %}
+                        <button class="remove-btn" title="Remove">&#10005;</button>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <div class="empty-state" id="scheduleEmptyState" style="display: {% if schedule %}none{% else %}block{% endif %};">
                 <p>No leaders in the schedule yet.</p>
                 <p>Click <strong>+ Add Leader</strong> above or use <code>/add @user</code> in Discord.</p>
             </div>
-            {% endif %}
             
             <div class="info-box">
                 <h3>Discord Commands</h3>
@@ -1094,11 +1174,15 @@
         const directoryContent = document.getElementById('directoryContent');
         const directoryToggle = document.getElementById('directoryToggle');
         const directoryArrow = document.getElementById('directoryArrow');
-        let isDirectoryVisible = true;
+        let isDirectoryVisible = false;
         const dateWheel = document.getElementById('dateWheel');
         const DATE_ITEM_HEIGHT = 44;
         let dateOptions = [];
         let selectedDateValue = null;
+        const scheduleEmptyState = document.getElementById('scheduleEmptyState');
+        const scheduleListWrapper = document.getElementById('scheduleListWrapper');
+        let scheduleSignature = '';
+        let isDragging = false;
         
         function checkAuthStatus() {
             fetch('/api/check-login')
@@ -1227,6 +1311,63 @@
             return scheduleList ? scheduleList.querySelectorAll('.schedule-item:not(.drag-placeholder)') : [];
         }
 
+        function getScheduleState() {
+            return Array.from(getScheduleItems()).map(item => ({
+                id: item.dataset.id,
+                name: item.dataset.name,
+                date: item.dataset.date
+            }));
+        }
+
+        function setScheduleVisibility(hasItems) {
+            if (scheduleListWrapper) scheduleListWrapper.style.display = hasItems ? 'block' : 'none';
+            if (scheduleEmptyState) scheduleEmptyState.style.display = hasItems ? 'none' : 'block';
+        }
+
+        function renderScheduleList(schedule) {
+            if (!scheduleList) return;
+
+            const hasItems = Array.isArray(schedule) && schedule.length > 0;
+            setScheduleVisibility(hasItems);
+
+            if (!hasItems) {
+                scheduleList.innerHTML = '';
+                scheduleSignature = JSON.stringify([]);
+                updateUpcomingLeader();
+                return;
+            }
+
+            scheduleList.innerHTML = schedule.map((entry, index) => `
+                <li class="schedule-item ${index === 0 ? 'current' : ''}" draggable="true" data-id="${entry.id}" data-name="${escapeHtml(entry.name)}" data-date="${entry.date}">
+                    <span class="drag-handle">&#9776;</span>
+                    <span class="week-number editable-date" onclick="editDate(this)" title="Click to change date" style="cursor: pointer;">${entry.date}</span>
+                    <span class="leader-name">${escapeHtml(entry.name)}</span>
+                    ${index === 0 ? '<span class="current-badge">This Week</span>' : ''}
+                    <button class="remove-btn" title="Remove">&#10005;</button>
+                </li>
+            `).join('');
+
+            scheduleSignature = JSON.stringify(schedule);
+            updateUpcomingLeader();
+            updateCurrentHighlight();
+        }
+
+        function fetchScheduleLive() {
+            if (!scheduleList || isDragging) return;
+
+            fetch('/api/schedule')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        const incomingSignature = JSON.stringify(data.schedule || []);
+                        if (incomingSignature !== scheduleSignature) {
+                            renderScheduleList(data.schedule || []);
+                        }
+                    }
+                })
+                .catch(() => {});
+        }
+
         function updateUpcomingLeader() {
             const firstItem = scheduleList?.querySelector('.schedule-item:not(.drag-placeholder)');
             const leaderName = firstItem ? firstItem.dataset.name : '--';
@@ -1260,9 +1401,13 @@
         updateCountdown();
         updateUpcomingLeader();
         updateCurrentHighlight();
+        setScheduleVisibility(getScheduleItems().length > 0);
+        scheduleSignature = JSON.stringify(getScheduleState());
         setInterval(updateCountdown, 1000);
         applyDirectoryVisibility();
         loadServerMembers();
+        fetchScheduleLive();
+        setInterval(fetchScheduleLive, 5000);
 
         if (scheduleList) {
             let draggedItem = null;
@@ -1280,6 +1425,7 @@
             scheduleList.addEventListener('dragstart', (e) => {
                 if (e.target.classList.contains('schedule-item')) {
                     draggedItem = e.target;
+                    isDragging = true;
                     e.target.classList.add('dragging');
                     e.dataTransfer.effectAllowed = 'move';
                     e.dataTransfer.setData('text/plain', e.target.dataset.id);
@@ -1302,6 +1448,7 @@
                     e.target.classList.remove('dragging');
                     resetDragUI();
                     draggedItem = null;
+                    isDragging = false;
                 }
             });
 
@@ -1417,6 +1564,7 @@
                         item.dataset.date = originalDates[index];
                         item.querySelector('.week-number').textContent = originalDates[index];
                     });
+                    scheduleSignature = JSON.stringify(getScheduleState());
                 } else {
                     showStatus('Error saving', 'error');
                 }
@@ -1626,7 +1774,7 @@
                 if (data.success) {
                     showStatus('Added!', 'success');
                     closeAddModal();
-                    setTimeout(() => location.reload(), 500);
+                    setTimeout(fetchScheduleLive, 300);
                 } else {
                     showStatus(data.error || 'Error adding', 'error');
                 }
@@ -1725,6 +1873,7 @@
                     editingDateElement.closest('.schedule-item').dataset.date = selectedDateValue;
                     showStatus('Date updated!', 'success');
                     closeEditDateModal();
+                    scheduleSignature = JSON.stringify(getScheduleState());
                     updateCountdown();
                 } else {
                     showStatus('Error updating date', 'error');
@@ -1751,12 +1900,11 @@
                     showStatus('Removed!', 'success');
                     setTimeout(() => {
                         item.remove();
-                        if (scheduleList && scheduleList.children.length === 0) {
-                            location.reload();
-                        } else {
-                            updateUpcomingLeader();
-                            updateCurrentHighlight();
-                        }
+                        const hasItems = getScheduleItems().length > 0;
+                        setScheduleVisibility(hasItems);
+                        scheduleSignature = JSON.stringify(getScheduleState());
+                        updateUpcomingLeader();
+                        updateCurrentHighlight();
                     }, 400);
                 } else {
                     item.classList.remove('removing');

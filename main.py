@@ -254,6 +254,24 @@ def get_next_schedule_date(schedule):
     next_saturday = now + timedelta(days=days_until_saturday)
     return next_saturday.replace(hour=STUDY_HOUR, minute=STUDY_MINUTE, second=0, microsecond=0)
 
+
+def get_next_schedule_date(schedule):
+    """Return the next available Saturday at the study time for a new schedule entry."""
+    now = datetime.now(BRISBANE_TZ)
+
+    if schedule:
+        last_entry = schedule[-1]
+        last_date = parse_date_string(last_entry.get("date", "")) if isinstance(last_entry, dict) else None
+        if last_date:
+            return last_date + timedelta(days=7)
+
+    days_until_saturday = (5 - now.weekday()) % 7
+    if days_until_saturday == 0 and has_past_study_time(now):
+        days_until_saturday = 7
+
+    next_saturday = now + timedelta(days=days_until_saturday)
+    return next_saturday.replace(hour=STUDY_HOUR, minute=STUDY_MINUTE, second=0, microsecond=0)
+
 def get_countdown():
     """Get countdown in seconds to next study time."""
     now = datetime.now(BRISBANE_TZ)
@@ -783,27 +801,10 @@ def logout():
 
 @app.route('/')
 def home():
-    current_schedule = load_schedule(None)
-    schedule_data = []
-    for i, entry in enumerate(current_schedule):
-        if isinstance(entry, dict):
-            date_str = entry.get("date", format_date(get_date_for_week(i)))
-            schedule_data.append({
-                "id": entry["id"],
-                "name": entry["name"],
-                "date": date_str
-            })
-        else:
-            date_str = format_date(get_date_for_week(i))
-            schedule_data.append({
-                "id": entry,
-                "name": f"User {entry}",
-                "date": date_str
-            })
-    
+    schedule_data = build_schedule_view_data()
     bot_name = "Bot starting..." if not bot.user else str(bot.user)
-    
-    return render_template('dashboard.html', 
+
+    return render_template('dashboard.html',
                            schedule=schedule_data,
                            bot_name=bot_name)
 
@@ -825,6 +826,36 @@ def update_date():
         return jsonify({"success": True})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)})
+
+
+def build_schedule_view_data():
+    """Return schedule entries with formatted dates for display."""
+    current_schedule = load_schedule(None)
+    schedule_data = []
+    for i, entry in enumerate(current_schedule):
+        if isinstance(entry, dict):
+            date_str = entry.get("date", format_date(get_date_for_week(i)))
+            schedule_data.append({
+                "id": entry["id"],
+                "name": entry["name"],
+                "date": date_str
+            })
+        else:
+            date_str = format_date(get_date_for_week(i))
+            schedule_data.append({
+                "id": entry,
+                "name": f"User {entry}",
+                "date": date_str
+            })
+
+    return schedule_data
+
+
+@app.route('/api/schedule')
+def api_schedule():
+    """Expose the current schedule for live dashboard updates."""
+    schedule_data = build_schedule_view_data()
+    return jsonify({"success": True, "schedule": schedule_data})
 
 @app.route('/api/reorder', methods=['POST'])
 def reorder_schedule():
