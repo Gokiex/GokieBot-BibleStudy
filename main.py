@@ -230,8 +230,6 @@ def get_next_study_time():
     days_until_saturday = (5 - now.weekday()) % 7
     if days_until_saturday == 0 and has_past_study_time(now):
         days_until_saturday = 7
-    elif days_until_saturday == 0:
-        days_until_saturday = 0
     
     next_study = now + timedelta(days=days_until_saturday)
     next_study = next_study.replace(hour=STUDY_HOUR, minute=STUDY_MINUTE, second=0, microsecond=0)
