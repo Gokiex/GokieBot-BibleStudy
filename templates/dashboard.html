@@ -1021,6 +1021,7 @@
                     dropCompleted = false;
                     e.target.classList.add('dragging');
                     e.dataTransfer.effectAllowed = 'move';
+                    e.dataTransfer.setData('text/plain', e.target.dataset.id || 'dragging');
 
                     // Store original state before drag
                     const currentItems = Array.from(scheduleList.querySelectorAll('.schedule-item'));
@@ -1108,40 +1109,20 @@
                 }
             });
         }
-        
+
         function getDragAfterElement(container, y) {
             const draggableElements = [...container.querySelectorAll('.schedule-item:not(.dragging)')];
-            
+
             return draggableElements.reduce((closest, child) => {
                 const box = child.getBoundingClientRect();
                 const offset = y - box.top - box.height / 2;
-                
+
                 if (offset < 0 && offset > closest.offset) {
                     return { offset: offset, element: child };
                 } else {
                     return closest;
                 }
             }, { offset: Number.NEGATIVE_INFINITY }).element;
-        }
-        
-        function updateWeekNumbers() {
-            const items = scheduleList.querySelectorAll('.schedule-item');
-            items.forEach((item, index) => {
-                item.querySelector('.week-number').textContent = `Week ${index + 1}`;
-                
-                item.classList.remove('current');
-                const badge = item.querySelector('.current-badge');
-                if (badge) badge.remove();
-                
-                if (index === 0) {
-                    item.classList.add('current');
-                    const removeBtn = item.querySelector('.remove-btn');
-                    const newBadge = document.createElement('span');
-                    newBadge.className = 'current-badge';
-                    newBadge.textContent = 'This Week';
-                    removeBtn.before(newBadge);
-                }
-            });
         }
         
         function saveNewOrder(dateOrder = null) {
